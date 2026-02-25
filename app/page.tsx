@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const USERS = [
-  { email: 'harry@dayof.com',  password: 'changeme', name: 'Harry',  role: 'admin' },
-  { email: 'haines@dayof.com', password: 'changeme', name: 'Haines', role: 'admin' },
-  { email: 'abhi@dayof.com',   password: 'changeme', name: 'Abhi',   role: 'admin' },
-  { email: 'genner@dayof.com', password: 'changeme', name: 'Genner', role: 'support' },
+  { email: 'harry@dayofweddings.com',  password: 'changeme', name: 'Harry',  role: 'admin' },
+  { email: 'haines@ayofweddings.com', password: 'changeme', name: 'Haines', role: 'admin' },
+  { email: 'abhi@ayofweddings.com',   password: 'changeme', name: 'Abhi',   role: 'admin' },
+  { email: 'genner@ayofweddings.com', password: 'changeme', name: 'Genner', role: 'support' },
 ];
 
 function DayOfLogo() {
@@ -33,11 +33,12 @@ export default function Login() {
     const user = USERS.find(u => u.email === email && u.password === password);
     if (user) {
       sessionStorage.setItem('dayof_user', JSON.stringify(user));
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } else {
       setError('Invalid email or password.');
     }
   };
+  
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb' }}>
