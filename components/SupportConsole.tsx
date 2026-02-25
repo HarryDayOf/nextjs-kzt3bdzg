@@ -240,7 +240,7 @@ function ActionBtn({ label, variant = 'default', onClick }: { label: string; var
     danger:  { bg: '#fdecea', border: '#fca5a5', color: '#c62828' },
     success: { bg: '#e8f5e9', border: '#86efac', color: '#2e7d32' },
     warning: { bg: '#fff8e1', border: '#fcd34d', color: '#b45309' },
-  }[variant];
+}[variant] ?? { bg: '#f9fafb', border: '#e5e7eb', color: '#374151' };
   return <button onClick={onClick} style={{ padding: '8px 16px', backgroundColor: v.bg, border: `1px solid ${v.border}`, borderRadius: '8px', color: v.color, fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>{label}</button>;
 }
 
