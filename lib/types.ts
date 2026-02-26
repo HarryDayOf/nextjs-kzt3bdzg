@@ -53,12 +53,33 @@ export interface ConsoleUser {
   id: string; name: string; email: string; role: Role; active: boolean; joined: string; lastLogin: string;
 }
 
+export interface LoginEntry {
+  ip: string; ts: string; userAgent: string; device: string;
+}
+
+export interface DuplicateFlag {
+  matchedUserId: string; matchedUserName: string; reason: string;
+  confidence: 'high' | 'medium' | 'low'; detectedAt: string;
+}
+
 export interface User {
   id: string; name: string; email: string; role: 'vendor' | 'couple';
   status: 'active' | 'suspended' | 'pending' | 'probation'; joined: string;
   listings: number; transactions: number; tawk_id: string; revenue: number;
   responseRate?: number; bookingRate?: number; cancellationRate?: number; avgRating?: number;
   repeatFlags?: number;
+  // Stripe
+  stripeAccountId?: string; stripeCustomerId?: string;
+  stripeConnected?: boolean; payoutsEnabled?: boolean; chargesEnabled?: boolean;
+  // Sharetribe native
+  emailVerified?: boolean;
+  identityProviders?: { provider: string; userId: string }[];
+  // Tracking (custom middleware → Sharetribe privateData)
+  lastLoginIp?: string; lastLoginAt?: string; signupIp?: string;
+  loginHistory?: LoginEntry[];
+  deviceFingerprint?: string;
+  // Duplicate detection
+  duplicateFlags?: DuplicateFlag[];
 }
 
 export interface Listing {

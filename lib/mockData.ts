@@ -1,4 +1,4 @@
-import type { User, Listing, Transaction, Review, Conversation, Note, AuditEntry, AlertConfig, ConsoleUser, VendorDocument, DocStatus } from './types';
+import type { User, Listing, Transaction, Review, Conversation, Note, AuditEntry, AlertConfig, ConsoleUser, VendorDocument, DocStatus, LoginEntry } from './types';
 
 export const MOCK_CONSOLE_USERS: ConsoleUser[] = [
   { id: 'cu_1', name: 'Harry McLaughlin', email: 'harry@dayof.com', role: 'admin', active: true, joined: '2024-09-01', lastLogin: '2025-02-25T08:30:00Z' },
