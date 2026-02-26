@@ -1,11 +1,11 @@
-// ─── ROLES & PERMISSIONS ──────────────────────────────────────────────────────
+// ─── ROLES & PERMISSIONS ─────────────────────────────────────────────────────
 export type Role = 'admin' | 'cs' | 'moderation' | 'leadership' | 'readonly';
 
 export const ROLE_PERMS: Record<Role, string[]> = {
-  admin:      ['view', 'notes', 'flag', 'export', 'config'],
-  cs:         ['view', 'notes', 'flag', 'export'],
-  moderation: ['view', 'notes', 'flag', 'export'],
-  leadership: ['view', 'export'],
+  admin:      ['view','edit','suspend','refund','delete','notes','assign','export','config','users_manage','bulk'],
+  cs:         ['view','edit','notes','assign','refund','export'],
+  moderation: ['view','notes','suspend','assign','export'],
+  leadership: ['view','export','notes'],
   readonly:   ['view'],
 };
 
@@ -19,6 +19,38 @@ export function can(role: Role, action: string): boolean {
 }
 
 // ─── ENTITIES ─────────────────────────────────────────────────────────────────
+export interface ConsoleUser {
+  id: string; name: string; email: string; role: Role; active: boolean; joined: string; lastLogin: string;
+}
+
+export interface User {
+  id: string; name: string; email: string; role: 'vendor' | 'couple';
+  status: 'active' | 'suspended' | 'pending' | 'probation'; joined: string;
+  listings: number; transactions: number; tawk_id: string; revenue: number;
+  tier?: 'verified' | 'featured' | 'new' | 'probation' | 'standard';
+  responseRate?: number; bookingRate?: number; cancellationRate?: number; avgRating?: number;
+  repeatFlags?: number;
+}
+
+export interface Listing {
+  id: string; title: string; vendor: string; vendor_id: string;
+  price: number; status: 'active' | 'suspended' | 'pending_review'; category: string; created: string;
+  views?: number; inquiries?: number; bookings?: number;
+}
+
+export interface Transaction {
+  id: string; stripe_id: string; buyer: string; buyer_id: string;
+  seller: string; seller_id: string; listing: string; listing_id: string;
+  amount: number; status: 'completed' | 'disputed' | 'refunded' | 'pending';
+  date: string; disputed: boolean;
+  dispute_reason?: string; dispute_opened?: string;
+}
+
+export interface Review {
+  id: string; author: string; author_id: string; target: string; target_id: string;
+  listing: string; listing_id: string; rating: number; content: string; date: string; flagged: boolean;
+}
+
 export interface Message {
   id: string; sender: string; role: 'vendor' | 'couple'; text: string; ts: string;
 }
@@ -41,14 +73,18 @@ export interface AuditEntry {
   detail: string; ts: string;
 }
 
+export interface AlertConfig {
+  id: string; label: string; enabled: boolean; threshold?: number; channel: 'email' | 'slack' | 'console';
+}
+
 // ─── KEYWORDS ─────────────────────────────────────────────────────────────────
 export type KWCategory = 'payment' | 'contact' | 'offplatform';
 export type KWHit = { word: string; category: KWCategory };
 
 export const KW_CATEGORIES: Record<KWCategory, { label: string; color: string; bg: string; words: string[] }> = {
-  payment:     { label: 'Payment',      color: '#c62828', bg: '#fdecea', words: ['venmo', 'zelle', 'cashapp', 'cash app', 'paypal', 'wire transfer', 'bank transfer', 'western union', 'crypto', 'bitcoin'] },
-  contact:     { label: 'Contact',      color: '#b45309', bg: '#fff8e1', words: ['text me', 'call me', 'whatsapp', 'instagram dm', 'facebook', '@gmail', '@yahoo', '@icloud', '@hotmail', 'my number', 'phone number'] },
-  offplatform: { label: 'Off-Platform', color: '#7c3aed', bg: '#f5f3ff', words: ['off the app', 'off platform', 'outside the platform', 'my website', 'direct booking', 'book directly', 'bypass', 'avoid fees', 'save on fees', 'skip the platform'] },
+  payment:     { label:'Payment',      color:'#c62828', bg:'#fdecea', words:['venmo','zelle','cashapp','cash app','paypal','wire transfer','bank transfer','western union','crypto','bitcoin'] },
+  contact:     { label:'Contact',      color:'#b45309', bg:'#fff8e1', words:['text me','call me','whatsapp','instagram dm','facebook','@gmail','@yahoo','@icloud','@hotmail','my number','phone number'] },
+  offplatform: { label:'Off-Platform', color:'#7c3aed', bg:'#f5f3ff', words:['off the app','off platform','outside the platform','my website','direct booking','book directly','bypass','avoid fees','save on fees','skip the platform'] },
 };
 
 export function detectKeywords(text: string): KWHit[] {
@@ -81,13 +117,23 @@ export function riskLabel(score: number): string {
 
 // ─── STATUS STYLES ────────────────────────────────────────────────────────────
 export const STATUS_STYLES: Record<string, { label: string; bg: string; color: string }> = {
-  active:   { label: 'Active',   bg: '#e8f5e9', color: '#2e7d32' },
-  flagged:  { label: 'Flagged',  bg: '#fff3e0', color: '#e65100' },
-  clean:    { label: 'Clean',    bg: '#e8f5e9', color: '#2e7d32' },
-  reviewed: { label: 'Reviewed', bg: '#e0f2fe', color: '#0369a1' },
+  active:         { label:'Active',         bg:'#e8f5e9', color:'#2e7d32' },
+  suspended:      { label:'Suspended',      bg:'#fdecea', color:'#c62828' },
+  pending:        { label:'Pending',        bg:'#fff8e1', color:'#f57f17' },
+  pending_review: { label:'Pending Review', bg:'#fff8e1', color:'#f57f17' },
+  probation:      { label:'Probation',      bg:'#fff3e0', color:'#e65100' },
+  completed:      { label:'Completed',      bg:'#e8f5e9', color:'#2e7d32' },
+  disputed:       { label:'Disputed',       bg:'#fdecea', color:'#c62828' },
+  refunded:       { label:'Refunded',       bg:'#f3f4f6', color:'#6b7280' },
+  flagged:        { label:'Flagged',        bg:'#fff3e0', color:'#e65100' },
+  clean:          { label:'Clean',          bg:'#e8f5e9', color:'#2e7d32' },
+  verified:       { label:'Verified',       bg:'#e0f2fe', color:'#0369a1' },
+  featured:       { label:'Featured',       bg:'#fdf4ff', color:'#7e22ce' },
+  new:            { label:'New',            bg:'#f0fdf4', color:'#15803d' },
+  standard:       { label:'Standard',       bg:'#f3f4f6', color:'#6b7280' },
 };
 
-// ─── CSV EXPORT ───────────────────────────────────────────────────────────────
+// ─── EXPORTS / PRINT ─────────────────────────────────────────────────────────
 export function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   if (!rows.length) return;
   const keys = Object.keys(rows[0]);
@@ -99,4 +145,15 @@ export function downloadCSV(rows: Record<string, unknown>[], filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
+}
+
+export function printTable(title: string, rows: Record<string, unknown>[], columns: { key: string; label: string }[]) {
+  const html = `<!DOCTYPE html><html><head><title>${title}</title>
+  <style>body{font-family:Georgia,serif;padding:32px;color:#111}h1{font-size:20px;margin-bottom:4px}p.meta{color:#888;font-size:12px;margin-bottom:24px}table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f3f4f6;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#555;border-bottom:2px solid #e5e7eb}td{padding:8px 12px;border-bottom:1px solid #f3f4f6}tr:nth-child(even)td{background:#fafafa}@media print{body{padding:16px}}</style>
+  </head><body><h1>${title}</h1><p class="meta">Generated ${new Date().toLocaleString()} · ${rows.length} records</p>
+  <table><thead><tr>${columns.map(c => `<th>${c.label}</th>`).join('')}</tr></thead>
+  <tbody>${rows.map(r => `<tr>${columns.map(c => `<td>${r[c.key] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody>
+  </table></body></html>`;
+  const w = window.open('', '_blank'); if (!w) return;
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
 }
