@@ -319,7 +319,7 @@ export default function SupportConsole({ user }: { user: any }) {
       {/* HEADER */}
       <header style={{ backgroundColor: NAVY, borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 28px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <a href="/" style={{ textDecoration: 'none' }}><Logo white /></a>
+          <button onClick={() => changeTab('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Logo white /></button>
           <div style={{ height: '16px', width: '1px', backgroundColor: 'rgba(255,255,255,0.15)' }} />
           <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Support Console</span>
         </div>
