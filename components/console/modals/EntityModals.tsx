@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import { Modal, DR, Btn, Badge, IdChip, RoleBadge, KWChip, NotesPanel, highlightKeywords, CopyBtn, NAVY } from '../ui';
-import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, mkC, type KWHit, type Role } from '../../../lib/types';
+import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, mkC, type KWHit, type Role, type KeywordConfig } from '../../../lib/types';
 
 // ─── USER MODAL ───────────────────────────────────────────────────────────────
 export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUser, darkMode }: any) {
@@ -313,14 +313,14 @@ export function ReviewModal({ review, notes, onClose, onAction, currentUser, dar
 }
 
 // ─── CONVERSATION MODAL ───────────────────────────────────────────────────────
-export function ConversationModal({ conv, notes, onClose, onAction, currentUser, darkMode }: any) {
+export function ConversationModal({ conv, notes, onClose, onAction, currentUser, darkMode, kwConfig }: any) {
   const C = mkC(darkMode ?? false);
   const [tab, setTab] = useState<'thread' | 'notes'>('thread');
-  const allHits = conv.messages.flatMap((m: any) => detectKeywords(m.text));
+  const allHits = kwConfig ? conv.messages.flatMap((m: any) => detectKeywords(m.text, kwConfig)) : [];
   const hits = uniqueHits(allHits);
-  const score = riskScore(conv);
-  const rc = riskColor(score);
-  const rl = riskLabel(score);
+  const score = kwConfig ? riskScore(conv, kwConfig) : 0;
+  const rc = kwConfig ? riskColor(score, kwConfig) : '#2e7d32';
+  const rl = kwConfig ? riskLabel(score, kwConfig) : 'Low Risk';
   const tabActive = darkMode ? '#e2e8f0' : NAVY;
   const tabBorder = darkMode ? '#60a5fa' : NAVY;
 
@@ -357,7 +357,7 @@ export function ConversationModal({ conv, notes, onClose, onAction, currentUser,
               </div>
             </div>
             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-              {hits.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} />)}
+              {hits.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} kwConfig={kwConfig} />)}
             </div>
           </div>
         )}
@@ -365,7 +365,7 @@ export function ConversationModal({ conv, notes, onClose, onAction, currentUser,
         <div style={{ backgroundColor: C.surfaceAlt, borderRadius: '10px', border: '1px solid ' + C.borderLight, padding: '16px', marginBottom: '16px', maxHeight: '320px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {conv.messages.map((msg: any) => {
             const isV = msg.role === 'vendor';
-            const mh = detectKeywords(msg.text);
+            const mh = kwConfig ? detectKeywords(msg.text, kwConfig) : [];
             const fl = mh.length > 0;
             return (
               <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isV ? 'flex-end' : 'flex-start' }}>
@@ -374,9 +374,9 @@ export function ConversationModal({ conv, notes, onClose, onAction, currentUser,
                   {' · '}{new Date(msg.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                 </div>
                 <div style={{ maxWidth: '75%', padding: '10px 14px', borderRadius: isV ? '12px 4px 12px 12px' : '4px 12px 12px 12px', backgroundColor: fl ? (darkMode ? '#2a1215' : '#fdecea') : isV ? NAVY : C.surface, border: fl ? `1px solid ${darkMode ? '#7f1d1d' : '#fca5a5'}` : isV ? 'none' : '1px solid ' + C.border, color: fl ? C.text : isV ? '#fff' : C.text, fontSize: '13px', lineHeight: 1.6 }}>
-                  {highlightKeywords(msg.text)}
+                  {highlightKeywords(msg.text, kwConfig)}
                 </div>
-                {fl && <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>{mh.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} />)}</div>}
+                {fl && <div style={{ display: 'flex', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>{mh.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} kwConfig={kwConfig} />)}</div>}
               </div>
             );
           })}

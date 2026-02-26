@@ -7,14 +7,16 @@ import { TableTab } from './TableTab';
 import { DocumentsTab } from './DocumentsTab';
 import { UserModal, ListingModal, TransactionModal, ReviewModal, ConversationModal, SendMessageModal } from './modals/EntityModals';
 import { ReportsModal, AuditLogModal, ConsoleUsersModal, AlertsConfigModal } from './modals/SystemModals';
+import { SettingsTab } from './SettingsTab';
 import {
   MOCK_USERS, MOCK_LISTINGS, MOCK_TRANSACTIONS, MOCK_REVIEWS,
   MOCK_CONVERSATIONS, MOCK_NOTES, MOCK_AUDIT, MOCK_ALERT_CONFIGS, MOCK_CONSOLE_USERS,
+  MOCK_KEYWORD_CONFIG,
 } from '../../lib/mockData';
-import { downloadCSV, printTable, mkC, type Role, type Note, type AuditEntry, type KWCategory } from '../../lib/types';
+import { downloadCSV, printTable, mkC, detectKeywords, type Role, type Note, type AuditEntry, type KeywordConfig } from '../../lib/types';
 
 // ─── FILTER + SORT ENGINE ─────────────────────────────────────────────────────
-function applyFiltersAndSort(items: any[], search: string, fields: string[], filters: any, sort: string): any[] {
+function applyFiltersAndSort(items: any[], search: string, fields: string[], filters: any, sort: string, kwConfig?: KeywordConfig): any[] {
   let out = search ? items.filter(i => fields.some(f => String(i[f] ?? '').toLowerCase().includes(search.toLowerCase()))) : items;
   const f = filters;
   if (f.role) out = out.filter(i => i.role === f.role);
@@ -41,11 +43,9 @@ function applyFiltersAndSort(items: any[], search: string, fields: string[], fil
   if (f.max_rating) out = out.filter(i => i.rating <= Number(f.max_rating));
   if (f.reviewed === 'yes') out = out.filter(i => i.reviewed);
   if (f.reviewed === 'no') out = out.filter(i => !i.reviewed);
-  if (f.kw_category) out = out.filter(i => i.messages?.some((m: any) => {
-    const lower = m.text.toLowerCase();
-    const kwCat = f.kw_category as KWCategory;
-    const kwWords = { payment: ['venmo','zelle','cashapp','paypal','wire transfer','crypto','bitcoin'], contact: ['text me','call me','whatsapp','instagram dm','facebook','@gmail','@yahoo'], offplatform: ['off the app','off platform','my website','direct booking','book directly','bypass','avoid fees'] };
-    return kwWords[kwCat]?.some((w: string) => lower.includes(w));
+  if (f.kw_category && kwConfig) out = out.filter(i => i.messages?.some((m: any) => {
+    const hits = detectKeywords(m.text, kwConfig);
+    return hits.some(h => h.category === f.kw_category);
   }));
   if (sort) {
     const desc = sort.startsWith('-');
@@ -104,6 +104,7 @@ export default function SupportConsole({ user }: { user: any }) {
   const [audit, setAudit] = useState<AuditEntry[]>(MOCK_AUDIT);
   const [alertConfigs, setAlertConfigs] = useState<any[]>(MOCK_ALERT_CONFIGS);
   const [consoleUsers, setConsoleUsers] = useState<any[]>(MOCK_CONSOLE_USERS);
+  const [kwConfig, setKwConfig] = useState<KeywordConfig>(MOCK_KEYWORD_CONFIG);
 
   // — selected entity modals
   const [selU, setSelU] = useState<any>(null);
@@ -152,8 +153,8 @@ export default function SupportConsole({ user }: { user: any }) {
     if (convFilter === 'flagged') base = base.filter(c => c.status === 'flagged');
     else if (convFilter === 'clean') base = base.filter(c => c.status === 'clean');
     else if (convFilter === 'unreviewed') base = base.filter(c => c.status === 'flagged' && !c.reviewed);
-    return applyFiltersAndSort(base, debouncedSearch, ['id'], filters, sort);
-  }, [convs, convFilter, debouncedSearch, filters, sort]);
+    return applyFiltersAndSort(base, debouncedSearch, ['id'], filters, sort, kwConfig);
+  }, [convs, convFilter, debouncedSearch, filters, sort, kwConfig]);
 
   const unrev = convs.filter(c => c.status === 'flagged' && !c.reviewed).length;
   const activeData = { users, listings, transactions, reviews, conversations: convs, alerts: alertConfigs };
@@ -347,6 +348,7 @@ export default function SupportConsole({ user }: { user: any }) {
     { id: 'transactions', label: 'Transactions', alert: 0 },
     { id: 'reviews', label: 'Reviews', alert: 0 },
     { id: 'conversations', label: 'Conversations', alert: unrev },
+    ...(currentRole === 'admin' ? [{ id: 'settings', label: 'Settings', alert: 0 }] : []),
   ];
 
   return (
@@ -441,7 +443,9 @@ export default function SupportConsole({ user }: { user: any }) {
       {/* MAIN CONTENT */}
       <div style={{ flex: 1 }}>
         {tab === 'dashboard' ? (
-          <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} darkMode={darkMode} />
+          <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} darkMode={darkMode} kwConfig={kwConfig} />
+        ) : tab === 'settings' ? (
+          <SettingsTab kwConfig={kwConfig} onUpdateKwConfig={setKwConfig} darkMode={darkMode} currentRole={currentRole} toast={toast} addAudit={addAudit} user={user} />
         ) : tab === 'documents' ? (
           <DocumentsTab listings={listings} darkMode={darkMode} onAction={handleListingAction} onSelectListing={l => setSelL(l)} />
         ) : (
@@ -473,6 +477,7 @@ export default function SupportConsole({ user }: { user: any }) {
                 setConvFilter={f => { setConvFilter(f); setPage(1); }}
                 allConvs={convs}
                 darkMode={darkMode}
+                kwConfig={kwConfig}
               />
             </div>
           </div>
@@ -490,11 +495,11 @@ export default function SupportConsole({ user }: { user: any }) {
       {selL && <ListingModal listing={selL} notes={notes} onClose={() => setSelL(null)} onAction={handleListingAction} onAddNote={() => {}} currentUser={user} darkMode={darkMode} />}
       {selT && <TransactionModal txn={selT} notes={notes} onClose={() => setSelT(null)} onAction={handleTxnAction} currentUser={user} darkMode={darkMode} />}
       {selR && <ReviewModal review={selR} notes={notes} onClose={() => setSelR(null)} onAction={handleReviewAction} currentUser={user} darkMode={darkMode} />}
-      {selC && <ConversationModal conv={selC} notes={notes} onClose={() => setSelC(null)} onAction={handleConvAction} currentUser={user} darkMode={darkMode} />}
+      {selC && <ConversationModal conv={selC} notes={notes} onClose={() => setSelC(null)} onAction={handleConvAction} currentUser={user} darkMode={darkMode} kwConfig={kwConfig} />}
       {msgTarget && <SendMessageModal user={msgTarget} onClose={() => setMsgTarget(null)} onSend={(msg: any) => { toast(`Message sent via ${msg.channel}.`); addAudit('Sent message', 'user', msgTarget.id, msgTarget.name, `Sent via ${msg.channel}`); }} darkMode={darkMode} />}
 
       {/* SYSTEM MODALS */}
-      {showReports && <ReportsModal data={activeData} onClose={() => setShowReports(false)} role={currentRole} darkMode={darkMode} />}
+      {showReports && <ReportsModal data={activeData} onClose={() => setShowReports(false)} role={currentRole} darkMode={darkMode} kwConfig={kwConfig} />}
       {showAudit && <AuditLogModal audit={audit} onClose={() => setShowAudit(false)} darkMode={darkMode} />}
       {showConsoleUsers && <ConsoleUsersModal consoleUsers={consoleUsers} onClose={() => setShowConsoleUsers(false)} onAction={handleConsoleUserAction} darkMode={darkMode} />}
       {showAlerts && <AlertsConfigModal alertConfigs={alertConfigs} onClose={() => setShowAlerts(false)} onUpdate={(a: any) => setAlertConfigs(cs => cs.map(c => c.id === a.id ? a : c))} darkMode={darkMode} />}

@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { StatCard, MiniBarChart, StackedBarChart, NAVY } from './ui';
-import { riskScore, riskColor, mkC } from '../../lib/types';
+import { riskScore, mkC, type KeywordConfig } from '../../lib/types';
 import { MOCK_GMV_WEEKLY, MOCK_SIGNUPS_WEEKLY } from '../../lib/mockData';
 
-export function DashboardTab({ data, onNavigate, role, darkMode }: { data: any; onNavigate: (tab: string, filter?: string) => void; role?: string; darkMode?: boolean }) {
+export function DashboardTab({ data, onNavigate, role, darkMode, kwConfig }: { data: any; onNavigate: (tab: string, filter?: string) => void; role?: string; darkMode?: boolean; kwConfig?: KeywordConfig }) {
   const C = mkC(darkMode ?? false);
   const linkColor = darkMode ? '#60a5fa' : NAVY;
   const isLeadership = role === 'admin' || role === 'leadership';
@@ -38,7 +38,7 @@ export function DashboardTab({ data, onNavigate, role, darkMode }: { data: any; 
     info:     { bg: darkMode ? '#0c1929' : '#e0f2fe', border: darkMode ? '#0369a1' : '#7dd3fc', color: darkMode ? '#7dd3fc' : '#0369a1', icon: '🔵' },
   };
 
-  const highRiskConvs = conversations.filter((c: any) => riskScore(c) >= 60);
+  const highRiskConvs = kwConfig ? conversations.filter((c: any) => riskScore(c, kwConfig) >= kwConfig.riskConfig.highThreshold) : [];
 
   // Moderation queue — items needing action
   const queue: { label: string; detail: string; level: string; tab: string }[] = [

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS, mkC } from '../../lib/types';
+import { STATUS_STYLES, type KWHit, type KeywordConfig, type Role, ROLE_LABELS, mkC } from '../../lib/types';
 
 // ─── COLORS ───────────────────────────────────────────────────────────────────
 export const NAVY = '#0f1428';
@@ -30,6 +30,9 @@ export function TabIcon({ id, color = 'currentColor' }: { id: string; color?: st
   );
   if (id === 'conversations') return (
     <svg {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  );
+  if (id === 'settings') return (
+    <svg {...props}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   );
   return null;
 }
@@ -93,9 +96,11 @@ export function IdChip({ value }: { value: string }) {
 }
 
 // ─── KEYWORD CHIP ─────────────────────────────────────────────────────────────
-export function KWChip({ word, category }: { word: string; category: KWCategory }) {
-  const cat = KW_CATEGORIES[category];
-  return <span style={{ fontFamily: 'monospace', fontSize: '11px', color: cat.color, backgroundColor: cat.bg, padding: '2px 8px', borderRadius: '4px', fontWeight: 600, border: `1px solid ${cat.color}30` }}>{word}</span>;
+export function KWChip({ word, category, kwConfig }: { word: string; category: string; kwConfig?: KeywordConfig }) {
+  const cat = kwConfig?.categories.find(c => c.id === category);
+  const color = cat?.color ?? '#6b7280';
+  const bg = cat?.bg ?? '#f3f4f6';
+  return <span style={{ fontFamily: 'monospace', fontSize: '11px', color, backgroundColor: bg, padding: '2px 8px', borderRadius: '4px', fontWeight: 600, border: `1px solid ${color}30` }}>{word}</span>;
 }
 
 // ─── BUTTON ───────────────────────────────────────────────────────────────────
@@ -249,29 +254,58 @@ export function NotesPanel({ entityType, entityId, notes, onAddNote, currentUser
 }
 
 // ─── KEYWORD HIGHLIGHT ────────────────────────────────────────────────────────
-export function highlightKeywords(text: string): React.ReactNode {
-  let parts: React.ReactNode[] = [text];
-  (Object.keys(KW_CATEGORIES) as KWCategory[]).forEach(cat => {
-    const data = KW_CATEGORIES[cat];
-    parts = parts.flatMap(node => {
-      if (typeof node !== 'string') return [node];
-      const result: React.ReactNode[] = []; let rem = node;
-      data.words.forEach(word => {
-        const idx = rem.toLowerCase().indexOf(word);
-        if (idx !== -1) {
-          if (idx > 0) result.push(rem.slice(0, idx));
-          result.push(<mark key={word + idx} style={{ backgroundColor: data.bg, color: data.color, fontWeight: 700, borderRadius: '3px', padding: '0 2px' }}>{rem.slice(idx, idx + word.length)}</mark>);
-          rem = rem.slice(idx + word.length);
+export function highlightKeywords(text: string, kwConfig?: KeywordConfig): React.ReactNode {
+  if (!kwConfig) return text;
+  // Collect all match regions
+  const regions: { start: number; end: number; color: string; bg: string }[] = [];
+  for (const rule of kwConfig.rules) {
+    if (!rule.enabled) continue;
+    const cat = kwConfig.categories.find(c => c.id === rule.categoryId);
+    if (!cat?.enabled) continue;
+    if (rule.type === 'exact') {
+      const lower = text.toLowerCase();
+      const pattern = rule.pattern.toLowerCase();
+      let pos = 0;
+      while (pos < lower.length) {
+        const idx = lower.indexOf(pattern, pos);
+        if (idx === -1) break;
+        regions.push({ start: idx, end: idx + pattern.length, color: cat.color, bg: cat.bg });
+        pos = idx + pattern.length;
+      }
+    } else {
+      try {
+        const re = new RegExp(rule.pattern, 'gi');
+        let match;
+        while ((match = re.exec(text)) !== null) {
+          regions.push({ start: match.index, end: match.index + match[0].length, color: cat.color, bg: cat.bg });
+          if (!match[0].length) break;
         }
-      });
-      result.push(rem); return result;
-    });
+      } catch { /* skip invalid regex */ }
+    }
+  }
+  if (!regions.length) return text;
+  // Sort by start position, merge overlaps
+  regions.sort((a, b) => a.start - b.start);
+  const merged: typeof regions = [];
+  for (const r of regions) {
+    const last = merged[merged.length - 1];
+    if (last && r.start <= last.end) { last.end = Math.max(last.end, r.end); }
+    else merged.push({ ...r });
+  }
+  // Build React nodes
+  const parts: React.ReactNode[] = [];
+  let pos = 0;
+  merged.forEach((r, i) => {
+    if (r.start > pos) parts.push(text.slice(pos, r.start));
+    parts.push(<mark key={i} style={{ backgroundColor: r.bg, color: r.color, fontWeight: 700, borderRadius: '3px', padding: '0 2px' }}>{text.slice(r.start, r.end)}</mark>);
+    pos = r.end;
   });
+  if (pos < text.length) parts.push(text.slice(pos));
   return <>{parts}</>;
 }
 
 // ─── FILTER PANEL ─────────────────────────────────────────────────────────────
-export function FilterPanel({ filters, setFilters, tab, darkMode }: { filters: any; setFilters: (f: any) => void; tab: string; darkMode?: boolean }) {
+export function FilterPanel({ filters, setFilters, tab, darkMode, kwConfig }: { filters: any; setFilters: (f: any) => void; tab: string; darkMode?: boolean; kwConfig?: KeywordConfig }) {
   const C = mkC(darkMode ?? false);
   const [open, setOpen] = useState(false);
   const f = filters;
@@ -307,7 +341,7 @@ export function FilterPanel({ filters, setFilters, tab, darkMode }: { filters: a
           {tab === 'listings' && <><div>{label('Status')}{sel('status', [['active','Active'],['suspended','Suspended'],['pending_review','Pending Review']])}</div><div>{label('Category')}{sel('category', [['Photography','Photography'],['Florals','Florals'],['Entertainment','Entertainment']])}</div><div>{label('Min Price ($)')}{inp('min_price','0','number')}</div><div>{label('Max Price ($)')}{inp('max_price','99999','number')}</div></>}
           {tab === 'transactions' && <><div>{label('Status')}{sel('status', [['completed','Completed'],['disputed','Disputed'],['refunded','Refunded'],['pending','Pending']])}</div><div>{label('Disputed')}{sel('disputed', [['yes','Disputed only'],['no','Non-disputed']])}</div><div>{label('Date After')}{inp('date_after','YYYY-MM-DD','date')}</div><div>{label('Date Before')}{inp('date_before','YYYY-MM-DD','date')}</div><div>{label('Min Amount ($)')}{inp('min_amount','0','number')}</div><div>{label('Max Amount ($)')}{inp('max_amount','99999','number')}</div><div style={{gridColumn:'1/-1'}}>{label('Seller')}{inp('seller','Filter by seller name')}</div><div style={{gridColumn:'1/-1'}}>{label('Buyer')}{inp('buyer','Filter by buyer name')}</div></>}
           {tab === 'reviews' && <><div>{label('Flagged')}{sel('flagged', [['yes','Flagged only'],['no','Not flagged']])}</div><div>{label('Min Rating')}{sel('min_rating', [['1','1+'],['2','2+'],['3','3+'],['4','4+'],['5','5 only']])}</div><div>{label('Max Rating')}{sel('max_rating', [['1','1 only'],['2','2 or less'],['3','3 or less'],['4','4 or less']])}</div><div>{label('Date After')}{inp('date_after','YYYY-MM-DD','date')}</div></>}
-          {tab === 'conversations' && <><div>{label('Status')}{sel('status', [['flagged','Flagged'],['clean','Clean']])}</div><div>{label('Reviewed')}{sel('reviewed', [['yes','Reviewed'],['no','Unreviewed']])}</div><div>{label('Keyword Type')}{sel('kw_category', [['payment','Payment'],['contact','Contact'],['offplatform','Off-Platform']])}</div></>}
+          {tab === 'conversations' && <><div>{label('Status')}{sel('status', [['flagged','Flagged'],['clean','Clean']])}</div><div>{label('Reviewed')}{sel('reviewed', [['yes','Reviewed'],['no','Unreviewed']])}</div><div>{label('Keyword Type')}{sel('kw_category', (kwConfig?.categories.filter(c => c.enabled) ?? []).map(c => [c.id, c.label] as [string, string]))}</div></>}
           <div style={{ gridColumn: '1/-1', paddingTop: '8px', borderTop: '1px solid ' + C.borderLight, display: 'flex', justifyContent: 'flex-end' }}>
             <Btn label="Apply" variant="primary" onClick={() => setOpen(false)} small darkMode={darkMode} />
           </div>

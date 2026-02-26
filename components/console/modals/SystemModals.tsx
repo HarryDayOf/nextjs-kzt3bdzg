@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import { Modal, Btn, Badge, IdChip, RoleBadge, StatCard, KWChip, NAVY } from '../ui';
-import { detectKeywords, uniqueHits, mkC, type KWHit, downloadCSV, printTable } from '../../../lib/types';
+import { detectKeywords, uniqueHits, mkC, type KWHit, type KeywordConfig, downloadCSV, printTable } from '../../../lib/types';
 
 // ─── REPORT SIDEBAR ICONS ─────────────────────────────────────────────────────
 function RptIcon({ id, color = 'currentColor' }: { id: string; color?: string }) {
@@ -15,7 +15,7 @@ function RptIcon({ id, color = 'currentColor' }: { id: string; color?: string })
 }
 
 // ─── REPORTS MODAL ────────────────────────────────────────────────────────────
-export function ReportsModal({ data, onClose, role, darkMode }: { data: any; onClose: () => void; role?: string; darkMode?: boolean }) {
+export function ReportsModal({ data, onClose, role, darkMode, kwConfig }: { data: any; onClose: () => void; role?: string; darkMode?: boolean; kwConfig?: KeywordConfig }) {
   const C = mkC(darkMode ?? false);
   const [active, setActive] = useState('overview');
   const showMoney = role === 'admin' || role === 'leadership';
@@ -109,14 +109,14 @@ export function ReportsModal({ data, onClose, role, darkMode }: { data: any; onC
                 <StatCard label="Reviewed" value={flaggedConvs.filter((c: any) => c.reviewed).length} color="#2e7d32" darkMode={darkMode} />
               </div>
               {flaggedConvs.map((c: any) => {
-                const hits = uniqueHits(c.messages.flatMap((m: any) => detectKeywords(m.text)));
+                const hits = kwConfig ? uniqueHits(c.messages.flatMap((m: any) => detectKeywords(m.text, kwConfig))) : [];
                 return (
                   <div key={c.id} style={{ border: `1px solid ${darkMode ? '#7f1d1d' : '#fca5a5'}`, borderRadius: '8px', padding: '14px 16px', marginBottom: '10px', backgroundColor: darkMode ? '#2a1215' : '#fffbf9' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <div><div style={{ fontWeight: 600, color: C.text, fontSize: '13px' }}>{c.participants.join(' + ')}</div><div style={{ fontSize: '11px', color: C.textMuted }}>{c.listing}</div></div>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>{c.reviewed && <span style={{ fontSize: '11px', color: '#2e7d32', fontWeight: 600 }}>Reviewed</span>}<Badge status="flagged" /></div>
                     </div>
-                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{hits.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} />)}</div>
+                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{hits.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} kwConfig={kwConfig} />)}</div>
                   </div>
                 );
               })}

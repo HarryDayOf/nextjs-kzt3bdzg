@@ -128,24 +128,76 @@ export interface AlertConfig {
   id: string; label: string; enabled: boolean; threshold?: number; channel: 'email' | 'slack' | 'console';
 }
 
-// ─── KEYWORDS ─────────────────────────────────────────────────────────────────
-export type KWCategory = 'payment' | 'contact' | 'offplatform';
-export type KWHit = { word: string; category: KWCategory };
+// ─── KEYWORD MANAGEMENT ──────────────────────────────────────────────────────
 
-export const KW_CATEGORIES: Record<KWCategory, { label: string; color: string; bg: string; words: string[] }> = {
-  payment:     { label:'Payment',      color:'#c62828', bg:'#fdecea', words:['venmo','zelle','cashapp','cash app','paypal','wire transfer','bank transfer','western union','crypto','bitcoin'] },
-  contact:     { label:'Contact',      color:'#b45309', bg:'#fff8e1', words:['text me','call me','whatsapp','instagram dm','facebook','@gmail','@yahoo','@icloud','@hotmail','my number','phone number'] },
-  offplatform: { label:'Off-Platform', color:'#7c3aed', bg:'#f5f3ff', words:['off the app','off platform','outside the platform','my website','direct booking','book directly','bypass','avoid fees','save on fees','skip the platform'] },
-};
+/** A single keyword detection rule */
+export interface KeywordRule {
+  id: string;
+  categoryId: string;
+  pattern: string;
+  type: 'exact' | 'regex';
+  enabled: boolean;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-export function detectKeywords(text: string): KWHit[] {
+/** A keyword category (grouping of rules) */
+export interface KeywordCategoryConfig {
+  id: string;
+  label: string;
+  color: string;
+  bg: string;
+  enabled: boolean;
+  weight: number;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Risk scoring configuration */
+export interface RiskConfig {
+  highThreshold: number;
+  mediumThreshold: number;
+  flaggedBonus: number;
+  maxScore: number;
+}
+
+/** Full keyword configuration — what the API returns */
+export interface KeywordConfig {
+  categories: KeywordCategoryConfig[];
+  rules: KeywordRule[];
+  riskConfig: RiskConfig;
+  lastUpdated: string;
+}
+
+export type KWHit = { word: string; matchedText?: string; category: string };
+
+/** Detect keywords using dynamic config (exact + regex support) */
+export function detectKeywords(text: string, config: KeywordConfig): KWHit[] {
   const lower = text.toLowerCase();
   const hits: KWHit[] = [];
-  (Object.keys(KW_CATEGORIES) as KWCategory[]).forEach(cat => {
-    KW_CATEGORIES[cat].words.forEach(word => {
-      if (lower.includes(word) && !hits.find(h => h.word === word)) hits.push({ word, category: cat });
-    });
-  });
+  const seen = new Set<string>();
+  for (const rule of config.rules) {
+    if (!rule.enabled) continue;
+    const cat = config.categories.find(c => c.id === rule.categoryId);
+    if (!cat?.enabled) continue;
+    if (rule.type === 'exact') {
+      if (lower.includes(rule.pattern.toLowerCase()) && !seen.has(rule.pattern)) {
+        seen.add(rule.pattern);
+        hits.push({ word: rule.pattern, matchedText: rule.pattern, category: rule.categoryId });
+      }
+    } else {
+      try {
+        const re = new RegExp(rule.pattern, 'gi');
+        const match = re.exec(text);
+        if (match && !seen.has(rule.id)) {
+          seen.add(rule.id);
+          hits.push({ word: rule.description || rule.pattern, matchedText: match[0], category: rule.categoryId });
+        }
+      } catch { /* invalid regex — skip */ }
+    }
+  }
   return hits;
 }
 
@@ -153,17 +205,22 @@ export function uniqueHits(hits: KWHit[]): KWHit[] {
   return hits.filter((h, i, arr) => arr.findIndex(x => x.word === h.word) === i);
 }
 
-export function riskScore(conv: Conversation): number {
-  const hits = uniqueHits(conv.messages.flatMap(m => detectKeywords(m.text)));
-  return Math.min(100, hits.length * 18 + (conv.status === 'flagged' ? 20 : 0));
+/** Risk score using per-category weights */
+export function riskScore(conv: Conversation, config: KeywordConfig): number {
+  const hits = uniqueHits(conv.messages.flatMap(m => detectKeywords(m.text, config)));
+  const score = hits.reduce((sum, hit) => {
+    const cat = config.categories.find(c => c.id === hit.category);
+    return sum + (cat?.weight ?? 18);
+  }, 0) + (conv.status === 'flagged' ? config.riskConfig.flaggedBonus : 0);
+  return Math.min(config.riskConfig.maxScore, score);
 }
 
-export function riskColor(score: number): string {
-  return score >= 60 ? '#c62828' : score >= 30 ? '#f57f17' : '#2e7d32';
+export function riskColor(score: number, config: KeywordConfig): string {
+  return score >= config.riskConfig.highThreshold ? '#c62828' : score >= config.riskConfig.mediumThreshold ? '#f57f17' : '#2e7d32';
 }
 
-export function riskLabel(score: number): string {
-  return score >= 60 ? 'High Risk' : score >= 30 ? 'Medium Risk' : 'Low Risk';
+export function riskLabel(score: number, config: KeywordConfig): string {
+  return score >= config.riskConfig.highThreshold ? 'High Risk' : score >= config.riskConfig.mediumThreshold ? 'Medium Risk' : 'Low Risk';
 }
 
 // ─── STATUS STYLES ────────────────────────────────────────────────────────────

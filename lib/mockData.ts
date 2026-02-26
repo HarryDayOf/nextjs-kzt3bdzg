@@ -1,4 +1,4 @@
-import type { User, Listing, Transaction, Review, Conversation, Note, AuditEntry, AlertConfig, ConsoleUser, VendorDocument, DocStatus, LoginEntry } from './types';
+import type { User, Listing, Transaction, Review, Conversation, Note, AuditEntry, AlertConfig, ConsoleUser, VendorDocument, DocStatus, LoginEntry, KeywordCategoryConfig, KeywordRule, RiskConfig, KeywordConfig } from './types';
 
 export const MOCK_CONSOLE_USERS: ConsoleUser[] = [
   { id: 'cu_1', name: 'Harry McLaughlin', email: 'harry@dayof.com', role: 'admin', active: true, joined: '2024-09-01', lastLogin: '2025-02-25T08:30:00Z' },
@@ -758,6 +758,62 @@ export const MOCK_ALERT_CONFIGS: AlertConfig[] = [
   { id: 'alt_6', label: 'Weekly digest report', enabled: true, channel: 'email' },
   { id: 'alt_7', label: 'Listing inactive 90+ days', enabled: false, threshold: 90, channel: 'console' },
 ];
+
+// ─── KEYWORD CONFIGURATION ──────────────────────────────────────────────────
+export const MOCK_KEYWORD_CATEGORIES: KeywordCategoryConfig[] = [
+  { id: 'payment', label: 'Payment', color: '#c62828', bg: '#fdecea', enabled: true, weight: 18, description: 'Off-platform payment solicitation', createdAt: '2024-09-01T00:00:00Z', updatedAt: '2025-02-20T00:00:00Z' },
+  { id: 'contact', label: 'Contact', color: '#b45309', bg: '#fff8e1', enabled: true, weight: 18, description: 'Sharing personal contact information', createdAt: '2024-09-01T00:00:00Z', updatedAt: '2025-02-20T00:00:00Z' },
+  { id: 'offplatform', label: 'Off-Platform', color: '#7c3aed', bg: '#f5f3ff', enabled: true, weight: 18, description: 'Attempts to circumvent platform', createdAt: '2024-09-01T00:00:00Z', updatedAt: '2025-02-20T00:00:00Z' },
+];
+
+export const MOCK_KEYWORD_RULES: KeywordRule[] = [
+  // Payment — exact matches
+  { id: 'kw_pay_01', categoryId: 'payment', pattern: 'venmo', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_02', categoryId: 'payment', pattern: 'zelle', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_03', categoryId: 'payment', pattern: 'cashapp', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_04', categoryId: 'payment', pattern: 'cash app', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_05', categoryId: 'payment', pattern: 'paypal', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_06', categoryId: 'payment', pattern: 'wire transfer', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_07', categoryId: 'payment', pattern: 'bank transfer', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_08', categoryId: 'payment', pattern: 'western union', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_09', categoryId: 'payment', pattern: 'crypto', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_pay_10', categoryId: 'payment', pattern: 'bitcoin', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  // Contact — exact matches
+  { id: 'kw_con_01', categoryId: 'contact', pattern: 'text me', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_02', categoryId: 'contact', pattern: 'call me', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_03', categoryId: 'contact', pattern: 'whatsapp', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_04', categoryId: 'contact', pattern: 'instagram dm', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_05', categoryId: 'contact', pattern: 'facebook', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_06', categoryId: 'contact', pattern: '@gmail', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_07', categoryId: 'contact', pattern: '@yahoo', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_08', categoryId: 'contact', pattern: '@icloud', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_09', categoryId: 'contact', pattern: '@hotmail', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_10', categoryId: 'contact', pattern: 'my number', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_con_11', categoryId: 'contact', pattern: 'phone number', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  // Contact — regex patterns
+  { id: 'kw_con_r01', categoryId: 'contact', pattern: '\\b\\d{3}[-.]?\\d{3}[-.]?\\d{4}\\b', type: 'regex', enabled: true, description: 'US phone number pattern', createdAt: '2025-02-20T00:00:00Z', updatedAt: '2025-02-20T00:00:00Z' },
+  { id: 'kw_con_r02', categoryId: 'contact', pattern: '\\b[\\w.-]+@[\\w.-]+\\.\\w{2,}\\b', type: 'regex', enabled: true, description: 'Email address pattern', createdAt: '2025-02-20T00:00:00Z', updatedAt: '2025-02-20T00:00:00Z' },
+  // Off-platform — exact matches
+  { id: 'kw_off_01', categoryId: 'offplatform', pattern: 'off the app', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_02', categoryId: 'offplatform', pattern: 'off platform', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_03', categoryId: 'offplatform', pattern: 'outside the platform', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_04', categoryId: 'offplatform', pattern: 'my website', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_05', categoryId: 'offplatform', pattern: 'direct booking', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_06', categoryId: 'offplatform', pattern: 'book directly', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_07', categoryId: 'offplatform', pattern: 'bypass', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_08', categoryId: 'offplatform', pattern: 'avoid fees', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_09', categoryId: 'offplatform', pattern: 'save on fees', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+  { id: 'kw_off_10', categoryId: 'offplatform', pattern: 'skip the platform', type: 'exact', enabled: true, createdAt: '2024-09-01T00:00:00Z', updatedAt: '2024-09-01T00:00:00Z' },
+];
+
+export const MOCK_RISK_CONFIG: RiskConfig = { highThreshold: 60, mediumThreshold: 30, flaggedBonus: 20, maxScore: 100 };
+
+export const MOCK_KEYWORD_CONFIG: KeywordConfig = {
+  categories: MOCK_KEYWORD_CATEGORIES,
+  rules: MOCK_KEYWORD_RULES,
+  riskConfig: MOCK_RISK_CONFIG,
+  lastUpdated: '2025-02-20T00:00:00Z',
+};
 
 // ─── WEEKLY CHART DATA ──────────────────────────────────────────────────────
 export const MOCK_GMV_WEEKLY = [

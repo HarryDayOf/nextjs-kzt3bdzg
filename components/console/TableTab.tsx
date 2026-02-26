@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { Badge, IdChip, KWChip, SortBtn, FilterPanel, Btn, CopyBtn, NAVY } from './ui';
-import { detectKeywords, uniqueHits, riskScore, riskColor, downloadCSV, printTable, mkC, type KWHit } from '../../lib/types';
+import { detectKeywords, uniqueHits, riskScore, riskColor, downloadCSV, printTable, mkC, type KWHit, type KeywordConfig } from '../../lib/types';
 
 interface TableTabProps {
   tab: string;
@@ -25,9 +25,10 @@ interface TableTabProps {
   setConvFilter?: (f: string) => void;
   allConvs?: any[];
   darkMode?: boolean;
+  kwConfig?: KeywordConfig;
 }
 
-export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange, sort, filters, setFilters, onSort, onSelect, onExportCSV, onPrint, tabSearch, setTabSearch, convFilter, setConvFilter, allConvs, darkMode }: TableTabProps) {
+export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange, sort, filters, setFilters, onSort, onSelect, onExportCSV, onPrint, tabSearch, setTabSearch, convFilter, setConvFilter, allConvs, darkMode, kwConfig }: TableTabProps) {
   const C = mkC(darkMode ?? false);
   const linkColor = darkMode ? '#60a5fa' : NAVY;
   const flagBg = darkMode ? '#1e1a10' : '#fffbf5';
@@ -84,7 +85,7 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             <input style={{ paddingLeft: '30px', paddingTop: '8px', paddingBottom: '8px', width: '200px', backgroundColor: C.inputBg, border: '1px solid ' + C.inputBorder, borderRadius: '8px', fontSize: '12px', color: C.text, outline: 'none' }} placeholder="Search..." value={tabSearch} onChange={e => setTabSearch(e.target.value)} />
           </div>
         )}
-        <FilterPanel filters={filters} setFilters={setFilters} tab={tab} darkMode={darkMode} />
+        <FilterPanel filters={filters} setFilters={setFilters} tab={tab} darkMode={darkMode} kwConfig={kwConfig} />
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '12px', color: C.textMuted }}>{totalCount.toLocaleString()} {totalCount === 1 ? 'result' : 'results'}</span>
           <Btn small label="⬇ CSV" onClick={onExportCSV} />
@@ -167,9 +168,9 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead><tr><SH label="Participants" sortKey="participants" /><SH label="Listing" sortKey="listing" /><SH label="Msgs" sortKey="message_count" /><SH label="Last Activity" sortKey="last_message" /><th style={{ ...th, padding: '10px 16px' }}>Risk</th><th style={{ ...th, padding: '10px 16px' }}>Keywords</th><SH label="Status" sortKey="status" /><th style={{ ...th, padding: '10px 16px' }} /></tr></thead>
             <tbody>{items.map((c: any) => {
-              const ch = uniqueHits(c.messages.flatMap((m: any) => detectKeywords(m.text)));
-              const score = riskScore(c);
-              const rc = riskColor(score);
+              const ch = kwConfig ? uniqueHits(c.messages.flatMap((m: any) => detectKeywords(m.text, kwConfig))) : [];
+              const score = kwConfig ? riskScore(c, kwConfig) : 0;
+              const rc = kwConfig ? riskColor(score, kwConfig) : '#2e7d32';
               const unrevBg = c.status === 'flagged' && !c.reviewed ? flagBg : 'transparent';
               return (
                 <tr key={c.id} style={{ cursor: 'pointer', backgroundColor: unrevBg }} onClick={() => onSelect(c)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = unrevBg)}>
@@ -178,7 +179,7 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
                   <td style={td}><span style={{ color: C.textMuted }}>{c.message_count}</span></td>
                   <td style={td}><span style={{ color: C.textMuted, fontSize: '12px' }}>{new Date(c.last_message).toLocaleDateString()}</span></td>
                   <td style={td}><div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><div style={{ width: '40px', height: '5px', backgroundColor: C.borderLight, borderRadius: '3px', overflow: 'hidden' }}><div style={{ width: `${score}%`, height: '100%', backgroundColor: rc, borderRadius: '3px' }} /></div><span style={{ fontSize: '11px', color: rc, fontWeight: 600 }}>{score}</span></div></td>
-                  <td style={td}>{ch.length > 0 ? <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>{ch.slice(0, 2).map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} />)}{ch.length > 2 && <span style={{ fontSize: '11px', color: C.textMuted }}>+{ch.length - 2}</span>}</div> : <span style={{ color: C.textFaint, fontSize: '12px' }}>None</span>}</td>
+                  <td style={td}>{ch.length > 0 ? <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap' }}>{ch.slice(0, 2).map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} kwConfig={kwConfig} />)}{ch.length > 2 && <span style={{ fontSize: '11px', color: C.textMuted }}>+{ch.length - 2}</span>}</div> : <span style={{ color: C.textFaint, fontSize: '12px' }}>None</span>}</td>
                   <td style={td}><Badge status={c.status} /></td>
                   <td style={td}>{c.reviewed && <span style={{ fontSize: '11px', color: '#2e7d32', fontWeight: 600 }}>✓</span>}</td>
                 </tr>
