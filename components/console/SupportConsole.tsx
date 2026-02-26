@@ -325,7 +325,7 @@ export default function SupportConsole({ user }: { user: any }) {
         </div>
 
         {/* GLOBAL SEARCH */}
-        <div style={{ flex: 1, maxWidth: '440px', margin: '0 32px', position: 'relative' }} ref={gsRef}>
+        <div className="console-search" style={{ position: 'relative' }} ref={gsRef}>
           <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '15px' }}>⌕</span>
           <input
             style={{ width: '100%', paddingLeft: '36px', paddingRight: '14px', paddingTop: '8px', paddingBottom: '8px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '13px', color: '#fff', outline: 'none', boxSizing: 'border-box' }}
@@ -351,7 +351,7 @@ export default function SupportConsole({ user }: { user: any }) {
               {unrev} unreviewed
             </button>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px' }}>
+          <div className="console-nav-actions" style={{ marginLeft: '4px' }}>
             <button onClick={() => setShowReports(true)} style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 500, borderRadius: '6px' }}
               onMouseOver={e => (e.currentTarget.style.color = '#fff')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Reports</button>
             <button onClick={() => setShowAudit(true)} style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 500, borderRadius: '6px' }}
@@ -390,7 +390,7 @@ export default function SupportConsole({ user }: { user: any }) {
           <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} />
         ) : (
           <div style={{ padding: '0' }}>
-            <div style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', margin: '24px 28px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div className="table-container" style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', margin: '24px 28px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <TableTab
                 tab={tab}
                 items={currentItems[tab] ?? []}

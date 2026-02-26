@@ -50,8 +50,12 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' }}>
       {/* Logo */}
-      <div style={{ marginBottom: '8px', fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: '28px', color: NAVY, letterSpacing: '-0.02em' }}>
-        Day<span style={{ fontStyle: 'italic' }}>of</span>
+      <div style={{ marginBottom: '6px' }}>
+        <img
+          src="https://sharetribe-assets.imgix.net/6946b9c5-eb75-4105-96e3-02ce6e1ddbbc/raw/15/781e7fee18323cc7395dc735bc1101c241e8b4?auto=format&fit=clip&h=36&w=370&s=5ac7e310f770da782ab7346d2870acf4"
+          alt="Day Of"
+          style={{ height: '28px', width: 'auto' }}
+        />
       </div>
       <div style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '40px' }}>
         Support Console

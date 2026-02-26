@@ -94,12 +94,21 @@ export function DR({ label, value }: { label: string; value: React.ReactNode }) 
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
 export function Logo({ white }: { white?: boolean }) {
-  const c = white ? '#fff' : NAVY;
-  return (
-    <div style={{ display: 'inline-flex', alignItems: 'baseline', fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: '20px', color: c, letterSpacing: '-0.02em' }}>
-      Day<span style={{ position: 'relative', display: 'inline-block' }}>O<span style={{ position: 'absolute', top: '1px', right: '-4px', width: '5px', height: '5px', borderRadius: '50%', backgroundColor: c, display: 'inline-block' }} /></span><span style={{ marginLeft: '9px' }}>f</span>
-    </div>
+  const img = (
+    <img
+      src="https://sharetribe-assets.imgix.net/6946b9c5-eb75-4105-96e3-02ce6e1ddbbc/raw/15/781e7fee18323cc7395dc735bc1101c241e8b4?auto=format&fit=clip&h=36&w=370&s=5ac7e310f770da782ab7346d2870acf4"
+      alt="Day Of"
+      style={{ height: '24px', width: 'auto', display: 'block' }}
+    />
   );
+  if (white) {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center', backgroundColor: '#fff', borderRadius: '6px', padding: '4px 10px' }}>
+        {img}
+      </div>
+    );
+  }
+  return <div style={{ display: 'inline-flex', alignItems: 'center' }}>{img}</div>;
 }
 
 // ─── STAT CARD ────────────────────────────────────────────────────────────────

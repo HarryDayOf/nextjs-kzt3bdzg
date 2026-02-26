@@ -54,10 +54,10 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
 
   if (!isLeadership) {
     return (
-      <div style={{ padding: '28px 32px' }}>
+      <div className="dash-pad">
 
         {/* MODERATION STATS */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
+        <div className="stat-grid-4">
           <StatCard label="Unreviewed Flags" value={unreviewedConvs.length} color={unreviewedConvs.length > 0 ? '#c62828' : undefined} sub={`${flaggedConvs.length} total flagged`} onClick={() => onNavigate('conversations')} />
           <StatCard label="High Risk Convs" value={highRiskConvs.length} color={highRiskConvs.length > 0 ? '#c62828' : undefined} sub="Score ≥ 60" onClick={() => onNavigate('conversations')} />
           <StatCard label="Flagged Reviews" value={flaggedReviews.length} color={flaggedReviews.length > 0 ? '#b45309' : undefined} sub="Need moderation" onClick={() => onNavigate('reviews')} />
@@ -65,7 +65,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
         </div>
 
         {/* NEEDS ATTENTION QUEUE */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+        <div className="panel-grid-21">
           <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Needs Attention
@@ -113,7 +113,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
   }
 
   return (
-    <div style={{ padding: '28px 32px' }}>
+    <div className="dash-pad">
 
       {/* ACTIVE ALERTS */}
       {activeAlerts.length > 0 && (
@@ -133,14 +133,14 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
       )}
 
       {/* TOP STATS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
+      <div className="stat-grid-4">
         <StatCard label="Total GMV" value={`$${totalGMV.toLocaleString()}`} sub="Completed transactions" trend={{ dir: 'up', val: '12% vs last month' }} onClick={() => onNavigate('transactions')} />
         <StatCard label="Active Vendors" value={activeVendors} sub={`${pendingVendors} pending approval`} onClick={() => onNavigate('users')} />
         <StatCard label="Dispute Rate" value={`${disputeRate}%`} sub={`${disputed.length} open disputes`} color={parseFloat(disputeRate) > 5 ? '#c62828' : undefined} trend={{ dir: parseFloat(disputeRate) > 5 ? 'up' : 'down', val: '2.1% vs last month' }} onClick={() => onNavigate('transactions')} />
         <StatCard label="Flagged Convs" value={flaggedConvs.length} sub={`${unreviewedConvs.length} unreviewed`} color={unreviewedConvs.length > 0 ? '#e65100' : undefined} onClick={() => onNavigate('conversations')} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
+      <div className="stat-grid-4">
         <StatCard label="Active Listings" value={activeListings} sub={`${pendingListings} pending review`} onClick={() => onNavigate('listings')} />
         <StatCard label="Suspended Users" value={suspendedUsers} color={suspendedUsers > 0 ? '#c62828' : undefined} onClick={() => onNavigate('users')} />
         <StatCard label="Avg Rating" value={reviews.length > 0 ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) + ' ★' : '—'} sub={`${reviews.length} total reviews`} onClick={() => onNavigate('reviews')} />
@@ -148,7 +148,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
       </div>
 
       {/* CHARTS */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
+      <div className="stat-grid-3">
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="gmv" label="Weekly GMV ($)" color={NAVY} />
         </div>
@@ -161,7 +161,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
       </div>
 
       {/* BOTTOM PANELS */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div className="panel-grid-2">
 
         {/* REPEAT OFFENDERS */}
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
