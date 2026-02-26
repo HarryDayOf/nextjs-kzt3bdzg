@@ -4,7 +4,8 @@ import { StatCard, MiniBarChart, StackedBarChart, NAVY } from './ui';
 import { riskScore, riskColor } from '../../lib/types';
 import { MOCK_GMV_WEEKLY, MOCK_SIGNUPS_WEEKLY } from '../../lib/mockData';
 
-export function DashboardTab({ data, onNavigate }: { data: any; onNavigate: (tab: string, filter?: string) => void }) {
+export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate: (tab: string, filter?: string) => void; role?: string }) {
+  const isLeadership = role === 'admin' || role === 'leadership';
   const { users, listings, transactions, reviews, conversations, alerts } = data;
 
   const completed = transactions.filter((t: any) => t.status === 'completed');
@@ -41,22 +42,19 @@ export function DashboardTab({ data, onNavigate }: { data: any; onNavigate: (tab
     <div style={{ padding: '28px 32px' }}>
 
       {/* ACTIVE ALERTS */}
-      {activeAlerts.length > 0 && (
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ fontSize: '12px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '10px' }}>Active Alerts</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {activeAlerts.map((a, i) => {
-              const style = alertColors[a.level];
-              return (
-                <div key={i} onClick={() => onNavigate(a.tab)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', backgroundColor: style.bg, border: `1px solid ${style.border}`, borderRadius: '8px', cursor: 'pointer' }}
-                  onMouseOver={e => (e.currentTarget.style.opacity = '0.85')} onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
-                  <span>{style.icon}</span>
-                  <span style={{ fontSize: '13px', color: style.color, fontWeight: 500, flex: 1 }}>{a.msg}</span>
-                  <span style={{ fontSize: '12px', color: style.color, opacity: 0.6 }}>View →</span>
-                </div>
-              );
-            })}
-          </div>
+      {isLeadership && activeAlerts.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: '2px' }}>Alerts</span>
+          {activeAlerts.map((a, i) => {
+            const s = alertColors[a.level];
+            return (
+              <button key={i} onClick={() => onNavigate(a.tab)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', backgroundColor: s.bg, border: `1px solid ${s.border}`, borderRadius: '20px', cursor: 'pointer', fontSize: '12px', color: s.color, fontWeight: 500 }}
+                onMouseOver={e => (e.currentTarget.style.opacity = '0.8')} onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                <span style={{ fontSize: '8px' }}>●</span>{a.msg}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -76,7 +74,7 @@ export function DashboardTab({ data, onNavigate }: { data: any; onNavigate: (tab
       </div>
 
       {/* CHARTS */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
+      {isLeadership && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="gmv" label="Weekly GMV ($)" color={NAVY} />
         </div>
@@ -86,10 +84,10 @@ export function DashboardTab({ data, onNavigate }: { data: any; onNavigate: (tab
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="disputes" label="Disputes per Week" color="#c62828" />
         </div>
-      </div>
+      </div>}
 
       {/* BOTTOM PANELS */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      {isLeadership && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
         {/* REPEAT OFFENDERS */}
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
@@ -134,7 +132,7 @@ export function DashboardTab({ data, onNavigate }: { data: any; onNavigate: (tab
           </table>
         </div>
 
-      </div>
+      </div>}
     </div>
   );
 }

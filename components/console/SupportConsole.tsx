@@ -307,7 +307,7 @@ export default function SupportConsole({ user }: { user: any }) {
   ];
 
   return (
-    <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", backgroundColor: '#f4f5f7', minHeight: '100vh' }}>
+    <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", backgroundColor: '#f4f5f7', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* TOAST */}
       {toastMsg && (
@@ -347,23 +347,28 @@ export default function SupportConsole({ user }: { user: any }) {
         {/* RIGHT SIDE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {unrev > 0 && (
-            <button onClick={() => { changeTab('conversations'); setConvFilter('unreviewed'); }} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 11px', backgroundColor: '#c62828', border: 'none', borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
-              ⚠ {unrev}
+            <button onClick={() => { changeTab('conversations'); setConvFilter('unreviewed'); }} style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '4px 10px', backgroundColor: '#c62828', border: 'none', borderRadius: '20px', fontSize: '11px', color: '#fff', cursor: 'pointer', fontWeight: 700, letterSpacing: '0.02em' }}>
+              {unrev} unreviewed
             </button>
           )}
-          <button onClick={() => setShowReports(true)} style={{ padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: 'pointer' }}>📊 Reports</button>
-          <button onClick={() => setShowAudit(true)} style={{ padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: 'pointer' }}>📋 Audit</button>
-          {currentRole === 'admin' && (
-            <>
-              <button onClick={() => setShowConsoleUsers(true)} style={{ padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: 'pointer' }}>👥 Team</button>
-              <button onClick={() => setShowAlerts(true)} style={{ padding: '6px 12px', backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '12px', color: '#fff', cursor: 'pointer' }}>🔔 Alerts</button>
-            </>
-          )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '4px' }}>
-            <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 600 }}>{user.name[0]}</div>
-            <div style={{ display: 'none' }}><div style={{ fontSize: '12px', fontWeight: 500, color: '#fff' }}>{user.name}</div></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginLeft: '4px' }}>
+            <button onClick={() => setShowReports(true)} style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 500, borderRadius: '6px' }}
+              onMouseOver={e => (e.currentTarget.style.color = '#fff')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Reports</button>
+            <button onClick={() => setShowAudit(true)} style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 500, borderRadius: '6px' }}
+              onMouseOver={e => (e.currentTarget.style.color = '#fff')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Audit</button>
+            {currentRole === 'admin' && (
+              <>
+                <button onClick={() => setShowConsoleUsers(true)} style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 500, borderRadius: '6px' }}
+                  onMouseOver={e => (e.currentTarget.style.color = '#fff')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Team</button>
+                <button onClick={() => setShowAlerts(true)} style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontWeight: 500, borderRadius: '6px' }}
+                  onMouseOver={e => (e.currentTarget.style.color = '#fff')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}>Alerts</button>
+              </>
+            )}
           </div>
-          <a href="/" style={{ padding: '5px 10px', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', textDecoration: 'none', display: 'inline-block' }}>← Roles</a>
+          <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.12)', margin: '0 4px' }} />
+          <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 600 }}>{user.name[0]}</div>
+          <a href="/" style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', textDecoration: 'none', fontWeight: 500 }}
+            onMouseOver={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}>Roles</a>
         </div>
       </header>
 
@@ -380,39 +385,41 @@ export default function SupportConsole({ user }: { user: any }) {
       </div>
 
       {/* MAIN CONTENT */}
-      {tab === 'dashboard' ? (
-        <DashboardTab data={activeData} onNavigate={changeTab} />
-      ) : (
-        <div style={{ padding: '0' }}>
-          <div style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', margin: '24px 28px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-            <TableTab
-              tab={tab}
-              items={currentItems[tab] ?? []}
-              sort={sort}
-              filters={filters}
-              setFilters={f => { setFilters(f); }}
-              onSort={handleSort}
-              onSelect={item => {
-                if (tab === 'users') setSelU(item);
-                else if (tab === 'listings') setSelL(item);
-                else if (tab === 'transactions') setSelT(item);
-                else if (tab === 'reviews') setSelR(item);
-                else if (tab === 'conversations') setSelC(item);
-              }}
-              onExportCSV={doExportCSV}
-              onPrint={doPrint}
-              tabSearch={tabSearch}
-              setTabSearch={setTabSearch}
-              convFilter={convFilter}
-              setConvFilter={setConvFilter}
-              allConvs={convs}
-            />
+      <div style={{ flex: 1 }}>
+        {tab === 'dashboard' ? (
+          <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} />
+        ) : (
+          <div style={{ padding: '0' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', margin: '24px 28px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <TableTab
+                tab={tab}
+                items={currentItems[tab] ?? []}
+                sort={sort}
+                filters={filters}
+                setFilters={f => { setFilters(f); }}
+                onSort={handleSort}
+                onSelect={item => {
+                  if (tab === 'users') setSelU(item);
+                  else if (tab === 'listings') setSelL(item);
+                  else if (tab === 'transactions') setSelT(item);
+                  else if (tab === 'reviews') setSelR(item);
+                  else if (tab === 'conversations') setSelC(item);
+                }}
+                onExportCSV={doExportCSV}
+                onPrint={doPrint}
+                tabSearch={tabSearch}
+                setTabSearch={setTabSearch}
+                convFilter={convFilter}
+                setConvFilter={setConvFilter}
+                allConvs={convs}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* FOOTER */}
-      <footer style={{ backgroundColor: NAVY, padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px' }}>
+      <footer style={{ backgroundColor: NAVY, padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Logo white />
         <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px' }}>Support Console · Internal Use Only</span>
       </footer>
