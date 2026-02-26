@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState, useMemo, useRef } from 'react';
-import { Logo, Btn, GlobalSearchResults, NAVY } from './ui';
+import { Logo, Btn, GlobalSearchResults, TabIcon, NAVY } from './ui';
 import { DashboardTab } from './DashboardTab';
 import { TableTab } from './TableTab';
 import { UserModal, ListingModal, TransactionModal, ReviewModal, ConversationModal, SendMessageModal } from './modals/EntityModals';
@@ -298,12 +298,12 @@ export default function SupportConsole({ user }: { user: any }) {
 
   // ─── TABS CONFIG ────────────────────────────────────────────────────────────
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: '⬛', alert: 0 },
-    { id: 'users', label: 'Users', icon: '👤', count: users.length, alert: 0 },
-    { id: 'listings', label: 'Listings', icon: '📋', count: listings.length, alert: 0 },
-    { id: 'transactions', label: 'Transactions', icon: '💳', count: transactions.length, alert: 0 },
-    { id: 'reviews', label: 'Reviews', icon: '★', count: reviews.length, alert: 0 },
-    { id: 'conversations', label: 'Conversations', icon: '💬', count: convs.length, alert: unrev },
+    { id: 'dashboard', label: 'Dashboard', alert: 0 },
+    { id: 'users', label: 'Users', count: users.length, alert: 0 },
+    { id: 'listings', label: 'Listings', count: listings.length, alert: 0 },
+    { id: 'transactions', label: 'Transactions', count: transactions.length, alert: 0 },
+    { id: 'reviews', label: 'Reviews', count: reviews.length, alert: 0 },
+    { id: 'conversations', label: 'Conversations', count: convs.length, alert: unrev },
   ];
 
   return (
@@ -374,14 +374,17 @@ export default function SupportConsole({ user }: { user: any }) {
 
       {/* TAB NAV */}
       <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 28px', display: 'flex', overflowX: 'auto' }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => changeTab(t.id)} style={{ padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: tab === t.id ? NAVY : '#9ca3af', borderBottom: tab === t.id ? `2px solid ${NAVY}` : '2px solid transparent', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-            <span style={{ fontSize: '12px' }}>{t.icon}</span>
-            {t.label}
-            {'count' in t && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: tab === t.id ? NAVY : '#f3f4f6', color: tab === t.id ? '#fff' : '#9ca3af', fontWeight: 600 }}>{t.count}</span>}
-            {t.alert > 0 && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: '#fdecea', color: '#c62828', fontWeight: 700 }}>{t.alert}</span>}
-          </button>
-        ))}
+        {tabs.map(t => {
+          const active = tab === t.id;
+          return (
+            <button key={t.id} onClick={() => changeTab(t.id)} style={{ padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: active ? NAVY : '#9ca3af', borderBottom: active ? `2px solid ${NAVY}` : '2px solid transparent', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+              <TabIcon id={t.id} color={active ? NAVY : '#9ca3af'} />
+              {t.label}
+              {'count' in t && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: active ? NAVY : '#f3f4f6', color: active ? '#fff' : '#9ca3af', fontWeight: 600 }}>{t.count}</span>}
+              {t.alert > 0 && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: '#fdecea', color: '#c62828', fontWeight: 700 }}>{t.alert}</span>}
+            </button>
+          );
+        })}
       </div>
 
       {/* MAIN CONTENT */}
