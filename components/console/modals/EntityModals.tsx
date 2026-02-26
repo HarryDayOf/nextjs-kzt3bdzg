@@ -111,7 +111,7 @@ export function ListingModal({ listing, notes, onClose, onAction, onAddNote, cur
                   {/* Doc Header */}
                   <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fafafa', borderBottom: '1px solid #f3f4f6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '20px' }}>{doc.type === 'dba_filing' ? '📋' : doc.type === 'business_license' ? '📄' : '🛡️'}</span>
+                      <span style={{ fontSize: '20px' }}>{doc.type.includes('dba') ? '📋' : doc.type === 'business_license' ? '📄' : '🛡️'}</span>
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY }}>{doc.label}</div>
                         <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '1px' }}>
@@ -123,19 +123,15 @@ export function ListingModal({ listing, notes, onClose, onAction, onAddNote, cur
                     <Badge status={doc.status} />
                   </div>
 
-                  {/* Inline Preview */}
-                  <div style={{ height: '350px', backgroundColor: '#f9fafb', position: 'relative' }}>
-                    <iframe
-                      src={doc.url}
-                      style={{ width: '100%', height: '100%', border: 'none' }}
-                      title={`Preview: ${doc.label}`}
-                    />
-                    <div style={{ position: 'absolute', bottom: '8px', right: '8px' }}>
-                      <a href={doc.url} target="_blank" rel="noopener noreferrer"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '5px 10px', backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '11px', color: NAVY, fontWeight: 500, textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-                        Open in new tab ↗
-                      </a>
-                    </div>
+                  {/* Document Preview */}
+                  <div style={{ padding: '24px', backgroundColor: '#f9fafb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', minHeight: '120px' }}>
+                    <div style={{ fontSize: '36px' }}>{doc.url.endsWith('.pdf') ? '📄' : '📎'}</div>
+                    <div style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{doc.label}</div>
+                    <div style={{ fontSize: '11px', color: '#9ca3af', fontFamily: 'monospace', maxWidth: '400px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.url.split('/').pop()}</div>
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', backgroundColor: NAVY, borderRadius: '8px', fontSize: '12px', color: '#fff', fontWeight: 500, textDecoration: 'none', marginTop: '4px' }}>
+                      Open Document ↗
+                    </a>
                   </div>
 
                   {/* Approve / Reject actions for pending docs */}

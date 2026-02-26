@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS } from '../../lib/types';
+import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS, mkC } from '../../lib/types';
 
 // ─── COLORS ───────────────────────────────────────────────────────────────────
 export const NAVY = '#0f1428';
@@ -24,6 +24,9 @@ export function TabIcon({ id, color = 'currentColor' }: { id: string; color?: st
   );
   if (id === 'reviews') return (
     <svg {...props}><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+  );
+  if (id === 'documents') return (
+    <svg {...props}><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/><path d="M13 3v6h6"/></svg>
   );
   if (id === 'conversations') return (
     <svg {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -117,7 +120,14 @@ export function DR({ label, value }: { label: string; value: React.ReactNode }) 
 }
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
-export function Logo({ white }: { white?: boolean }) {
+export function Logo({ white, darkMode }: { white?: boolean; darkMode?: boolean }) {
+  if (white && darkMode) {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+        <span style={{ fontSize: '18px', fontWeight: 700, color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.02em', fontStyle: 'italic' }}>Day<span style={{ fontWeight: 400 }}>Of</span></span>
+      </div>
+    );
+  }
   const img = (
     <img
       src="https://sharetribe-assets.imgix.net/6946b9c5-eb75-4105-96e3-02ce6e1ddbbc/raw/15/781e7fee18323cc7395dc735bc1101c241e8b4?auto=format&fit=clip&h=36&w=370&s=5ac7e310f770da782ab7346d2870acf4"
@@ -136,17 +146,18 @@ export function Logo({ white }: { white?: boolean }) {
 }
 
 // ─── STAT CARD ────────────────────────────────────────────────────────────────
-export function StatCard({ label, value, sub, color, trend, onClick }: { label: string; value: string | number; sub?: string; color?: string; trend?: { dir: 'up' | 'down'; val: string }; onClick?: () => void }) {
+export function StatCard({ label, value, sub, color, trend, onClick, darkMode }: { label: string; value: string | number; sub?: string; color?: string; trend?: { dir: 'up' | 'down'; val: string }; onClick?: () => void; darkMode?: boolean }) {
+  const C = mkC(darkMode ?? false);
   return (
-    <div onClick={onClick} style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '18px 20px', cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.15s' }}
-      onMouseOver={e => { if (onClick) (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; }}
+    <div onClick={onClick} style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '18px 20px', cursor: onClick ? 'pointer' : 'default', transition: 'box-shadow 0.15s, background-color 0.25s' }}
+      onMouseOver={e => { if (onClick) (e.currentTarget as HTMLDivElement).style.boxShadow = darkMode ? '0 4px 12px rgba(0,0,0,0.3)' : '0 4px 12px rgba(0,0,0,0.08)'; }}
       onMouseOut={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; }}>
-      <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{label}</div>
+      <div style={{ fontSize: '11px', color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>{label}</div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-        <div style={{ fontSize: '26px', fontWeight: 700, color: color || NAVY }}>{value}</div>
+        <div style={{ fontSize: '26px', fontWeight: 700, color: color || (darkMode ? '#e2e8f0' : NAVY) }}>{value}</div>
         {trend && <span style={{ fontSize: '12px', fontWeight: 600, color: trend.dir === 'up' ? '#2e7d32' : '#c62828' }}>{trend.dir === 'up' ? '↑' : '↓'} {trend.val}</span>}
       </div>
-      {sub && <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>{sub}</div>}
+      {sub && <div style={{ fontSize: '12px', color: C.textMuted, marginTop: '4px' }}>{sub}</div>}
     </div>
   );
 }

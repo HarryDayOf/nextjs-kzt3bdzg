@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { Logo, Btn, GlobalSearchResults, TabIcon, NAVY } from './ui';
 import { DashboardTab } from './DashboardTab';
 import { TableTab } from './TableTab';
+import { DocumentsTab } from './DocumentsTab';
 import { UserModal, ListingModal, TransactionModal, ReviewModal, ConversationModal, SendMessageModal } from './modals/EntityModals';
 import { ReportsModal, AuditLogModal, ConsoleUsersModal, AlertsConfigModal } from './modals/SystemModals';
 import {
@@ -337,10 +338,12 @@ export default function SupportConsole({ user }: { user: any }) {
 
   // ─── TABS CONFIG ────────────────────────────────────────────────────────────
   const pendingDocCount = listings.reduce((sum: number, l: any) => sum + ((l.documents ?? []).filter((d: any) => d.status === 'pending').length), 0);
+  const totalDocCount = listings.reduce((sum: number, l: any) => sum + ((l.documents ?? []).length), 0);
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', alert: 0 },
+    { id: 'documents', label: 'Documents', count: totalDocCount, alert: pendingDocCount },
     { id: 'users', label: 'Users', count: users.length, alert: 0 },
-    { id: 'listings', label: 'Listings', count: listings.length, alert: pendingDocCount },
+    { id: 'listings', label: 'Listings', count: listings.length, alert: 0 },
     { id: 'transactions', label: 'Transactions', count: transactions.length, alert: 0 },
     { id: 'reviews', label: 'Reviews', count: reviews.length, alert: 0 },
     { id: 'conversations', label: 'Conversations', count: convs.length, alert: unrev },
@@ -359,7 +362,7 @@ export default function SupportConsole({ user }: { user: any }) {
       {/* HEADER */}
       <header style={{ backgroundColor: NAVY, borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '0 28px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <button onClick={() => changeTab('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Logo white /></button>
+          <button onClick={() => changeTab('dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><Logo white darkMode={darkMode} /></button>
           <div style={{ height: '16px', width: '1px', backgroundColor: 'rgba(255,255,255,0.15)' }} />
           <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Support Console</span>
         </div>
@@ -440,6 +443,8 @@ export default function SupportConsole({ user }: { user: any }) {
       <div style={{ flex: 1 }}>
         {tab === 'dashboard' ? (
           <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} darkMode={darkMode} />
+        ) : tab === 'documents' ? (
+          <DocumentsTab listings={listings} darkMode={darkMode} onAction={handleListingAction} onSelectListing={l => setSelL(l)} />
         ) : (
           <div style={{ padding: '0' }}>
             <div className="table-container" style={{ backgroundColor: C.surface, borderRadius: '10px', border: '1px solid ' + C.border, margin: '24px 28px', overflow: 'hidden', boxShadow: darkMode ? 'none' : '0 1px 4px rgba(0,0,0,0.04)', transition: 'background-color 0.25s' }}>
@@ -477,7 +482,7 @@ export default function SupportConsole({ user }: { user: any }) {
 
       {/* FOOTER */}
       <footer style={{ backgroundColor: NAVY, padding: '18px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Logo white />
+        <Logo white darkMode={darkMode} />
         <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px' }}>Support Console · Internal Use Only</span>
       </footer>
 

@@ -60,10 +60,10 @@ export function DashboardTab({ data, onNavigate, role, darkMode }: { data: any; 
 
         {/* MODERATION STATS */}
         <div className="stat-grid-4">
-          <StatCard label="Unreviewed Flags" value={unreviewedConvs.length} color={unreviewedConvs.length > 0 ? '#c62828' : undefined} sub={`${flaggedConvs.length} total flagged`} onClick={() => onNavigate('conversations')} />
-          <StatCard label="High Risk Convs" value={highRiskConvs.length} color={highRiskConvs.length > 0 ? '#c62828' : undefined} sub="Score ≥ 60" onClick={() => onNavigate('conversations')} />
-          <StatCard label="Flagged Reviews" value={flaggedReviews.length} color={flaggedReviews.length > 0 ? '#b45309' : undefined} sub="Need moderation" onClick={() => onNavigate('reviews')} />
-          <StatCard label="Repeat Offenders" value={repeatOffenders.length} color={repeatOffenders.length > 0 ? '#c62828' : undefined} sub="≥2 policy flags" onClick={() => onNavigate('users')} />
+          <StatCard darkMode={darkMode} label="Unreviewed Flags" value={unreviewedConvs.length} color={unreviewedConvs.length > 0 ? '#c62828' : undefined} sub={`${flaggedConvs.length} total flagged`} onClick={() => onNavigate('conversations')} />
+          <StatCard darkMode={darkMode} label="High Risk Convs" value={highRiskConvs.length} color={highRiskConvs.length > 0 ? '#c62828' : undefined} sub="Score ≥ 60" onClick={() => onNavigate('conversations')} />
+          <StatCard darkMode={darkMode} label="Flagged Reviews" value={flaggedReviews.length} color={flaggedReviews.length > 0 ? '#b45309' : undefined} sub="Need moderation" onClick={() => onNavigate('reviews')} />
+          <StatCard darkMode={darkMode} label="Repeat Offenders" value={repeatOffenders.length} color={repeatOffenders.length > 0 ? '#c62828' : undefined} sub="≥2 policy flags" onClick={() => onNavigate('users')} />
         </div>
 
         {/* NEEDS ATTENTION QUEUE */}
@@ -136,17 +136,17 @@ export function DashboardTab({ data, onNavigate, role, darkMode }: { data: any; 
 
       {/* TOP STATS */}
       <div className="stat-grid-4">
-        <StatCard label="Total GMV" value={`$${totalGMV.toLocaleString()}`} sub="Completed transactions" trend={{ dir: 'up', val: '12% vs last month' }} onClick={() => onNavigate('transactions')} />
-        <StatCard label="Active Vendors" value={activeVendors} sub={`${pendingVendors} pending approval`} onClick={() => onNavigate('users')} />
-        <StatCard label="Dispute Rate" value={`${disputeRate}%`} sub={`${disputed.length} open disputes`} color={parseFloat(disputeRate) > 5 ? '#c62828' : undefined} trend={{ dir: parseFloat(disputeRate) > 5 ? 'up' : 'down', val: '2.1% vs last month' }} onClick={() => onNavigate('transactions')} />
-        <StatCard label="Flagged Convs" value={flaggedConvs.length} sub={`${unreviewedConvs.length} unreviewed`} color={unreviewedConvs.length > 0 ? '#e65100' : undefined} onClick={() => onNavigate('conversations')} />
+        <StatCard darkMode={darkMode} label="Total GMV" value={`$${totalGMV.toLocaleString()}`} sub="Completed transactions" trend={{ dir: 'up', val: '12% vs last month' }} onClick={() => onNavigate('transactions')} />
+        <StatCard darkMode={darkMode} label="Active Vendors" value={activeVendors} sub={`${pendingVendors} pending approval`} onClick={() => onNavigate('users')} />
+        <StatCard darkMode={darkMode} label="Dispute Rate" value={`${disputeRate}%`} sub={`${disputed.length} open disputes`} color={parseFloat(disputeRate) > 5 ? '#c62828' : undefined} trend={{ dir: parseFloat(disputeRate) > 5 ? 'up' : 'down', val: '2.1% vs last month' }} onClick={() => onNavigate('transactions')} />
+        <StatCard darkMode={darkMode} label="Flagged Convs" value={flaggedConvs.length} sub={`${unreviewedConvs.length} unreviewed`} color={unreviewedConvs.length > 0 ? '#e65100' : undefined} onClick={() => onNavigate('conversations')} />
       </div>
 
       <div className="stat-grid-4">
-        <StatCard label="Active Listings" value={activeListings} sub={`${pendingListings} pending review`} onClick={() => onNavigate('listings')} />
-        <StatCard label="Suspended Users" value={suspendedUsers} color={suspendedUsers > 0 ? '#c62828' : undefined} onClick={() => onNavigate('users')} />
-        <StatCard label="Avg Rating" value={reviews.length > 0 ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) + ' ★' : '—'} sub={`${reviews.length} total reviews`} onClick={() => onNavigate('reviews')} />
-        <StatCard label="High Risk Convs" value={highRiskConvs.length} color={highRiskConvs.length > 0 ? '#c62828' : undefined} sub="Score ≥ 60" onClick={() => onNavigate('conversations')} />
+        <StatCard darkMode={darkMode} label="Active Listings" value={activeListings} sub={`${pendingListings} pending review`} onClick={() => onNavigate('listings')} />
+        <StatCard darkMode={darkMode} label="Suspended Users" value={suspendedUsers} color={suspendedUsers > 0 ? '#c62828' : undefined} onClick={() => onNavigate('users')} />
+        <StatCard darkMode={darkMode} label="Avg Rating" value={reviews.length > 0 ? (reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1) + ' ★' : '—'} sub={`${reviews.length} total reviews`} onClick={() => onNavigate('reviews')} />
+        <StatCard darkMode={darkMode} label="High Risk Convs" value={highRiskConvs.length} color={highRiskConvs.length > 0 ? '#c62828' : undefined} sub="Score ≥ 60" onClick={() => onNavigate('conversations')} />
       </div>
 
       {/* CHARTS */}
