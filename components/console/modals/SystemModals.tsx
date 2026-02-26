@@ -4,9 +4,21 @@ import { useState } from 'react';
 import { Modal, Btn, Badge, IdChip, RoleBadge, StatCard, KWChip, NAVY } from '../ui';
 import { detectKeywords, uniqueHits, type KWHit, downloadCSV, printTable } from '../../../lib/types';
 
+// ─── REPORT SIDEBAR ICONS ─────────────────────────────────────────────────────
+function RptIcon({ id, color = 'currentColor' }: { id: string; color?: string }) {
+  const p = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.75, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  if (id === 'overview') return <svg {...p}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
+  if (id === 'transactions') return <svg {...p}><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>;
+  if (id === 'flags') return <svg {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
+  if (id === 'users') return <svg {...p}><circle cx="9" cy="7" r="4"/><path d="M2 21v-1a7 7 0 0 1 14 0v1"/></svg>;
+  if (id === 'vendors') return <svg {...p}><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>;
+  return null;
+}
+
 // ─── REPORTS MODAL ────────────────────────────────────────────────────────────
-export function ReportsModal({ data, onClose }: { data: any; onClose: () => void }) {
+export function ReportsModal({ data, onClose, role }: { data: any; onClose: () => void; role?: string }) {
   const [active, setActive] = useState('overview');
+  const showMoney = role === 'admin' || role === 'leadership';
 
   const completed = data.transactions.filter((t: any) => t.status === 'completed');
   const disputed = data.transactions.filter((t: any) => t.disputed);
@@ -16,11 +28,11 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
   const unreviewedConvs = flaggedConvs.filter((c: any) => !c.reviewed);
 
   const reports = [
-    { id: 'overview', label: '📊 Platform Overview' },
-    { id: 'transactions', label: '💳 Transactions' },
-    { id: 'flags', label: '⚠ Flagged Conversations' },
-    { id: 'users', label: '👤 Users' },
-    { id: 'vendors', label: '🏪 Vendor Performance' },
+    { id: 'overview', label: 'Platform Overview' },
+    { id: 'transactions', label: 'Transactions' },
+    { id: 'flags', label: 'Flagged Conversations' },
+    { id: 'users', label: 'Users' },
+    { id: 'vendors', label: 'Vendor Performance' },
   ];
 
   return (
@@ -29,7 +41,8 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
         {/* SIDEBAR */}
         <div style={{ width: '200px', flexShrink: 0 }}>
           {reports.map(r => (
-            <button key={r.id} onClick={() => setActive(r.id)} style={{ width: '100%', textAlign: 'left', padding: '10px 14px', backgroundColor: active === r.id ? '#f3f4f6' : 'transparent', border: 'none', borderRadius: '8px', fontSize: '13px', color: active === r.id ? NAVY : '#6b7280', cursor: 'pointer', fontWeight: active === r.id ? 600 : 400, marginBottom: '2px' }}>
+            <button key={r.id} onClick={() => setActive(r.id)} style={{ width: '100%', textAlign: 'left', padding: '9px 12px', backgroundColor: active === r.id ? '#f3f4f6' : 'transparent', border: 'none', borderRadius: '8px', fontSize: '13px', color: active === r.id ? NAVY : '#6b7280', cursor: 'pointer', fontWeight: active === r.id ? 600 : 400, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <RptIcon id={r.id} color={active === r.id ? NAVY : '#9ca3af'} />
               {r.label}
             </button>
           ))}
@@ -42,10 +55,10 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
             <div>
               <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY, marginBottom: '16px' }}>Platform Overview</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '20px' }}>
-                <StatCard label="Total Revenue" value={`$${totalGMV.toLocaleString()}`} sub="Completed transactions" />
+                {showMoney && <StatCard label="Total Revenue" value={`$${totalGMV.toLocaleString()}`} sub="Completed transactions" />}
                 <StatCard label="Active Users" value={data.users.filter((u: any) => u.status === 'active').length} sub={`of ${data.users.length} total`} />
                 <StatCard label="Active Listings" value={data.listings.filter((l: any) => l.status === 'active').length} sub={`of ${data.listings.length} total`} />
-                <StatCard label="Disputed" value={disputed.length} color={disputed.length > 0 ? '#c62828' : undefined} sub={`$${disputed.reduce((s: number, t: any) => s + t.amount, 0).toLocaleString()} at risk`} />
+                <StatCard label="Disputed" value={disputed.length} color={disputed.length > 0 ? '#c62828' : undefined} sub={showMoney ? `$${disputed.reduce((s: number, t: any) => s + t.amount, 0).toLocaleString()} at risk` : `${disputed.length} open`} />
                 <StatCard label="Suspended Users" value={suspended.length} color={suspended.length > 0 ? '#c62828' : undefined} />
                 <StatCard label="Flagged Convs" value={flaggedConvs.length} color={flaggedConvs.length > 0 ? '#e65100' : undefined} sub={`${unreviewedConvs.length} unreviewed`} />
               </div>
@@ -60,17 +73,25 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>Transaction Report</div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.transactions.map((t: any) => ({ ID: t.id, 'Stripe ID': t.stripe_id, Buyer: t.buyer, Seller: t.seller, Amount: t.amount, Status: t.status, Date: t.date, Disputed: t.disputed ? 'Yes' : 'No' })), 'dayof-transactions.csv')} />
-                  <Btn small label="🖨 Print" onClick={() => printTable('Transaction Report', data.transactions, [{ key: 'id', label: 'ID' }, { key: 'buyer', label: 'Buyer' }, { key: 'seller', label: 'Seller' }, { key: 'amount', label: 'Amount' }, { key: 'status', label: 'Status' }, { key: 'date', label: 'Date' }])} />
+                  <Btn small label="Export CSV" icon="↓" onClick={() => downloadCSV(data.transactions.map((t: any) => ({ ID: t.id, 'Stripe ID': t.stripe_id, Buyer: t.buyer, Seller: t.seller, Amount: t.amount, Status: t.status, Date: t.date, Disputed: t.disputed ? 'Yes' : 'No' })), 'dayof-transactions.csv')} />
+                  <Btn small label="Print" icon="⎙" onClick={() => printTable('Transaction Report', data.transactions, [{ key: 'id', label: 'ID' }, { key: 'buyer', label: 'Buyer' }, { key: 'seller', label: 'Seller' }, { key: 'amount', label: 'Amount' }, { key: 'status', label: 'Status' }, { key: 'date', label: 'Date' }])} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '16px' }}>
-                <StatCard label="Total Volume" value={`$${data.transactions.reduce((s: number, t: any) => s + t.amount, 0).toLocaleString()}`} />
+              <div style={{ display: 'grid', gridTemplateColumns: showMoney ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
+                {showMoney && <StatCard label="Total Volume" value={`$${data.transactions.reduce((s: number, t: any) => s + t.amount, 0).toLocaleString()}`} />}
                 <StatCard label="Completed" value={completed.length} />
                 <StatCard label="Disputed" value={disputed.length} color="#c62828" />
                 <StatCard label="Refunded" value={data.transactions.filter((t: any) => t.status === 'refunded').length} color="#b45309" />
               </div>
-              <ReportTable rows={data.transactions} columns={[{ key: 'id', label: 'ID', render: (v: string) => <IdChip value={v.slice(0, 14) + '...'} /> }, { key: 'buyer', label: 'Buyer' }, { key: 'seller', label: 'Seller' }, { key: 'amount', label: 'Amount', render: (v: number) => <strong>${v.toLocaleString()}</strong> }, { key: 'status', label: 'Status', render: (v: string) => <Badge status={v} /> }, { key: 'date', label: 'Date' }, { key: 'disputed', label: 'Disputed', render: (v: boolean) => v ? <span style={{ color: '#c62828', fontWeight: 700 }}>⚠</span> : null }]} />
+              <ReportTable rows={data.transactions} columns={[
+                { key: 'id', label: 'ID', render: (v: string) => <IdChip value={v.slice(0, 14) + '...'} /> },
+                { key: 'buyer', label: 'Buyer' },
+                { key: 'seller', label: 'Seller' },
+                ...(showMoney ? [{ key: 'amount', label: 'Amount', render: (v: number) => <strong>${v.toLocaleString()}</strong> }] : []),
+                { key: 'status', label: 'Status', render: (v: string) => <Badge status={v} /> },
+                { key: 'date', label: 'Date' },
+                { key: 'disputed', label: 'Disputed', render: (v: boolean) => v ? <span style={{ color: '#c62828', fontWeight: 700 }}>Disputed</span> : null },
+              ]} />
             </div>
           )}
 
@@ -79,8 +100,8 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>Flagged Conversations</div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <Btn small label="⬇ CSV" onClick={() => downloadCSV(flaggedConvs.map((c: any) => ({ ID: c.id, 'P1': c.participants[0], 'P2': c.participants[1], Listing: c.listing, Reviewed: c.reviewed ? 'Yes' : 'No' })), 'dayof-flags.csv')} />
-                  <Btn small label="🖨 Print" onClick={() => printTable('Flagged Conversations', flaggedConvs, [{ key: 'id', label: 'ID' }, { key: 'participants', label: 'Participants' }, { key: 'listing', label: 'Listing' }, { key: 'reviewed', label: 'Reviewed' }])} />
+                  <Btn small label="Export CSV" icon="↓" onClick={() => downloadCSV(flaggedConvs.map((c: any) => ({ ID: c.id, 'P1': c.participants[0], 'P2': c.participants[1], Listing: c.listing, Reviewed: c.reviewed ? 'Yes' : 'No' })), 'dayof-flags.csv')} />
+                  <Btn small label="Print" icon="⎙" onClick={() => printTable('Flagged Conversations', flaggedConvs, [{ key: 'id', label: 'ID' }, { key: 'participants', label: 'Participants' }, { key: 'listing', label: 'Listing' }, { key: 'reviewed', label: 'Reviewed' }])} />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '16px' }}>
@@ -94,7 +115,7 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
                   <div key={c.id} style={{ border: '1px solid #fca5a5', borderRadius: '8px', padding: '14px 16px', marginBottom: '10px', backgroundColor: '#fffbf9' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <div><div style={{ fontWeight: 600, color: NAVY, fontSize: '13px' }}>{c.participants.join(' + ')}</div><div style={{ fontSize: '11px', color: '#9ca3af' }}>{c.listing}</div></div>
-                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>{c.reviewed && <span style={{ fontSize: '11px', color: '#2e7d32', fontWeight: 600 }}>✓ Reviewed</span>}<Badge status="flagged" /></div>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>{c.reviewed && <span style={{ fontSize: '11px', color: '#2e7d32', fontWeight: 600 }}>Reviewed</span>}<Badge status="flagged" /></div>
                     </div>
                     <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>{hits.map((h: KWHit) => <KWChip key={h.word} word={h.word} category={h.category} />)}</div>
                   </div>
@@ -108,8 +129,8 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>User Report</div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.users.map((u: any) => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Joined: u.joined, Transactions: u.transactions })), 'dayof-users.csv')} />
-                  <Btn small label="🖨 Print" onClick={() => printTable('User Report', data.users, [{ key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'role', label: 'Role' }, { key: 'status', label: 'Status' }, { key: 'joined', label: 'Joined' }])} />
+                  <Btn small label="Export CSV" icon="↓" onClick={() => downloadCSV(data.users.map((u: any) => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Joined: u.joined, Transactions: u.transactions })), 'dayof-users.csv')} />
+                  <Btn small label="Print" icon="⎙" onClick={() => printTable('User Report', data.users, [{ key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'role', label: 'Role' }, { key: 'status', label: 'Status' }, { key: 'joined', label: 'Joined' }])} />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '16px' }}>
@@ -126,7 +147,7 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>Vendor Performance</div>
-                <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.users.filter((u: any) => u.role === 'vendor').map((u: any) => ({ Name: u.name, Status: u.status, 'Response Rate': u.responseRate + '%', 'Booking Rate': u.bookingRate + '%', 'Cancellation Rate': u.cancellationRate + '%', 'Avg Rating': u.avgRating, 'Repeat Flags': u.repeatFlags, Revenue: '$' + u.revenue })), 'dayof-vendor-performance.csv')} />
+                <Btn small label="Export CSV" icon="↓" onClick={() => downloadCSV(data.users.filter((u: any) => u.role === 'vendor').map((u: any) => ({ Name: u.name, Status: u.status, 'Response Rate': u.responseRate + '%', 'Booking Rate': u.bookingRate + '%', 'Cancellation Rate': u.cancellationRate + '%', 'Avg Rating': u.avgRating, 'Repeat Flags': u.repeatFlags, ...(showMoney ? { Revenue: '$' + u.revenue } : {}) })), 'dayof-vendor-performance.csv')} />
               </div>
               <ReportTable rows={data.users.filter((u: any) => u.role === 'vendor')} columns={[
                 { key: 'name', label: 'Vendor' },
@@ -136,7 +157,7 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
                 { key: 'cancellationRate', label: 'Cancel', render: (v: number) => <span style={{ color: v > 10 ? '#c62828' : '#374151', fontWeight: v > 10 ? 600 : 400 }}>{v}%</span> },
                 { key: 'avgRating', label: 'Rating', render: (v: number) => v ? <span style={{ color: v < 3 ? '#c62828' : '#374151' }}>{v.toFixed(1)} ★</span> : '—' },
                 { key: 'repeatFlags', label: 'Flags', render: (v: number) => v > 0 ? <span style={{ color: '#c62828', fontWeight: 700 }}>{v}</span> : '0' },
-                { key: 'revenue', label: 'Revenue', render: (v: number) => `$${(v || 0).toLocaleString()}` },
+                ...(showMoney ? [{ key: 'revenue', label: 'Revenue', render: (v: number) => `$${(v || 0).toLocaleString()}` }] : []),
               ]} />
             </div>
           )}

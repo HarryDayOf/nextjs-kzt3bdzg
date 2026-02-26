@@ -495,7 +495,7 @@ export default function SupportConsole({ user }: { user: any }) {
       {msgTarget && <SendMessageModal user={msgTarget} onClose={() => setMsgTarget(null)} onSend={(msg: any) => { toast(`Message sent via ${msg.channel}.`); addAudit('Sent message', 'user', msgTarget.id, msgTarget.name, `Sent via ${msg.channel}`); }} />}
 
       {/* SYSTEM MODALS */}
-      {showReports && <ReportsModal data={activeData} onClose={() => setShowReports(false)} />}
+      {showReports && <ReportsModal data={activeData} onClose={() => setShowReports(false)} role={currentRole} />}
       {showAudit && <AuditLogModal audit={audit} onClose={() => setShowAudit(false)} />}
       {showConsoleUsers && <ConsoleUsersModal consoleUsers={consoleUsers} onClose={() => setShowConsoleUsers(false)} onAction={handleConsoleUserAction} />}
       {showAlerts && <AlertsConfigModal alertConfigs={alertConfigs} onClose={() => setShowAlerts(false)} onUpdate={(a: any) => setAlertConfigs(cs => cs.map(c => c.id === a.id ? a : c))} />}
