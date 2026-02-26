@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import SupportConsole from '../../components/SupportConsole';
+import SupportConsole from '../../components/console/SupportConsole';
 
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
@@ -13,27 +13,7 @@ export default function Dashboard() {
     } else {
       setUser(JSON.parse(stored));
     }
-'use client';
-    import { useEffect, useState } from 'react';
-    import SupportConsole from '../../components/console/SupportConsole';
-    
-    export default function Dashboard() {
-        const [user, setUser] = useState<any>(null);
-        const [checked, setChecked] = useState(false);
-      
-        useEffect(() => {
-              const stored = sessionStorage.getItem('dayof_user');
-              if (!stored) {
-                      window.location.href = '/';
-              } else {
-                      setUser(JSON.parse(stored));
-              }
-              setChecked(true);
-        }, []);
-      
-        if (!checked || !user) return null;
-        return <SupportConsole user={user} />;
-    }setChecked(true);
+    setChecked(true);
   }, []);
 
   if (!checked || !user) return null;
