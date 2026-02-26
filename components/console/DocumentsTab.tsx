@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { Badge, Btn, NAVY } from './ui';
+import { Badge, Btn, CopyBtn, NAVY } from './ui';
 import { mkC } from '../../lib/types';
 
 export function DocumentsTab({ listings, darkMode, onAction, onSelectListing }: {
@@ -107,7 +107,7 @@ export function DocumentsTab({ listings, darkMode, onAction, onSelectListing }: 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <div>
                     <div style={{ fontSize: '11px', color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>File</div>
-                    <div style={{ fontSize: '12px', color: C.text, fontFamily: 'monospace' }}>{doc.url.split('/').pop()}</div>
+                    <div style={{ fontSize: '12px', color: C.text, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '4px' }}>{doc.url.split('/').pop()}<CopyBtn value={doc.url} size={11} /></div>
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '2px' }}>Submitted</div>

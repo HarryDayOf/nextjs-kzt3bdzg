@@ -85,7 +85,7 @@ export default function SupportConsole({ user }: { user: any }) {
   }, [tabSearch]);
 
   // — dark mode (persisted in localStorage for overnight CS agents)
-  const [darkMode, setDarkMode] = useState(() => typeof window !== 'undefined' && localStorage.getItem('dayof-dark') === '1');
+  const [darkMode, setDarkMode] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('dayof-dark') !== '0' : true);
   useEffect(() => { localStorage.setItem('dayof-dark', darkMode ? '1' : '0'); }, [darkMode]);
   const C = mkC(darkMode);
 

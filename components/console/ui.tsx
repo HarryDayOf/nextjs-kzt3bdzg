@@ -61,9 +61,35 @@ export function RoleBadge({ role }: { role: Role }) {
   );
 }
 
+// ─── COPY BUTTON ─────────────────────────────────────────────────────────────
+export function CopyBtn({ value, size = 13 }: { value: string; size?: number }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <button onClick={handleCopy} title={copied ? 'Copied!' : 'Copy to clipboard'}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '4px', color: copied ? '#2e7d32' : '#9ca3af', flexShrink: 0, transition: 'color 0.15s' }}
+      onMouseOver={e => { if (!copied) (e.currentTarget as HTMLButtonElement).style.color = '#6b7280'; }}
+      onMouseOut={e => { if (!copied) (e.currentTarget as HTMLButtonElement).style.color = '#9ca3af'; }}>
+      {copied
+        ? <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        : <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      }
+    </button>
+  );
+}
+
 // ─── ID CHIP ──────────────────────────────────────────────────────────────────
 export function IdChip({ value }: { value: string }) {
-  return <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280', backgroundColor: '#f3f4f6', padding: '2px 7px', borderRadius: '4px' }}>{value}</span>;
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontFamily: 'monospace', fontSize: '11px', color: '#6b7280', backgroundColor: '#f3f4f6', padding: '2px 7px', borderRadius: '4px' }}>
+      {value}<CopyBtn value={value} size={11} />
+    </span>
+  );
 }
 
 // ─── KEYWORD CHIP ─────────────────────────────────────────────────────────────
@@ -99,7 +125,7 @@ export function Modal({ title, subtitle, children, onClose, wide, extraWide }: {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
           <div>
             <div style={{ fontSize: '17px', fontWeight: 600, color: NAVY, marginBottom: '2px' }}>{title}</div>
-            {subtitle && <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: 'monospace' }}>{subtitle}</div>}
+            {subtitle && <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '4px' }}>{subtitle}<CopyBtn value={subtitle} size={11} /></div>}
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '22px', lineHeight: 1, paddingLeft: '16px' }}>×</button>
         </div>
@@ -110,11 +136,14 @@ export function Modal({ title, subtitle, children, onClose, wide, extraWide }: {
 }
 
 // ─── DETAIL ROW ───────────────────────────────────────────────────────────────
-export function DR({ label, value }: { label: string; value: React.ReactNode }) {
+export function DR({ label, value, copyValue }: { label: string; value: React.ReactNode; copyValue?: string }) {
   return (
     <div style={{ display: 'flex', gap: '16px', padding: '10px 0', borderBottom: '1px solid #f3f4f6', alignItems: 'flex-start' }}>
       <span style={{ color: '#9ca3af', fontSize: '12px', minWidth: '160px', fontWeight: 500, paddingTop: '1px' }}>{label}</span>
-      <span style={{ color: '#1f2937', fontSize: '13px', flex: 1 }}>{value}</span>
+      <span style={{ color: '#1f2937', fontSize: '13px', flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {value}
+        {copyValue && <CopyBtn value={copyValue} size={12} />}
+      </span>
     </div>
   );
 }

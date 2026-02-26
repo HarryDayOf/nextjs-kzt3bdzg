@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import { Badge, IdChip, KWChip, SortBtn, FilterPanel, Btn, NAVY } from './ui';
+import { Badge, IdChip, KWChip, SortBtn, FilterPanel, Btn, CopyBtn, NAVY } from './ui';
 import { detectKeywords, uniqueHits, riskScore, riskColor, downloadCSV, printTable, mkC, type KWHit } from '../../lib/types';
 
 interface TableTabProps {
@@ -84,8 +84,8 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             <thead><tr><SH label="Name" sortKey="name" /><SH label="Email" sortKey="email" /><SH label="Role" sortKey="role" /><SH label="Status" sortKey="status" /><SH label="Joined" sortKey="joined" /><SH label="Txns" sortKey="transactions" /><th style={{ ...th, padding: '10px 16px' }}>Flags</th><th style={{ ...th, padding: '10px 16px' }} /></tr></thead>
             <tbody>{items.map((u: any) => (
               <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => onSelect(u)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                <td style={td}><div style={{ fontWeight: 500, color: linkColor }}>{u.name}</div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace' }}>{u.id.slice(0, 8)}...</div></td>
-                <td style={td}><span style={{ color: C.textMuted }}>{u.email}</span></td>
+                <td style={td}><div style={{ fontWeight: 500, color: linkColor }}>{u.name}</div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '3px' }}>{u.id.slice(0, 8)}...<CopyBtn value={u.id} size={10} /></div></td>
+                <td style={td}><span style={{ color: C.textMuted, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{u.email}<CopyBtn value={u.email} size={11} /></span></td>
                 <td style={td}><span style={{ fontSize: '11px', color: C.textMuted, backgroundColor: C.surfaceAlt, padding: '2px 8px', borderRadius: '4px', fontWeight: 500 }}>{u.role}</span></td>
                 <td style={td}><Badge status={u.status} /></td>
                 <td style={td}><span style={{ color: C.textMuted, fontSize: '12px' }}>{u.joined}</span></td>
@@ -104,7 +104,7 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
               const ctr = (l.inquiries ?? 0) > 0 ? Math.round((l.bookings / l.inquiries) * 100) : 0;
               return (
                 <tr key={l.id} style={{ cursor: 'pointer' }} onClick={() => onSelect(l)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                  <td style={td}><div style={{ fontWeight: 500, color: linkColor }}>{l.title}</div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace' }}>{l.id}</div></td>
+                  <td style={td}><div style={{ fontWeight: 500, color: linkColor }}>{l.title}</div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '3px' }}>{l.id}<CopyBtn value={l.id} size={10} /></div></td>
                   <td style={td}><span style={{ color: C.textMuted }}>{l.vendor}</span></td>
                   <td style={td}><span style={{ fontSize: '11px', color: C.textMuted, backgroundColor: C.surfaceAlt, padding: '2px 8px', borderRadius: '4px', fontWeight: 500 }}>{l.category}</span></td>
                   <td style={td}><span style={{ fontWeight: 500 }}>${l.price.toLocaleString()}</span></td>
@@ -124,8 +124,8 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             <tbody>{items.map((t: any) => (
               <tr key={t.id} style={{ cursor: 'pointer', backgroundColor: t.disputed ? flagBg : 'transparent' }} onClick={() => onSelect(t)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = t.disputed ? flagBg : 'transparent')}>
                 <td style={td}><IdChip value={t.id.slice(0, 14) + '...'} /></td>
-                <td style={td}><span style={{ fontWeight: 500, color: linkColor }}>{t.buyer}</span></td>
-                <td style={td}><span style={{ color: C.textMuted }}>{t.seller}</span></td>
+                <td style={td}><span style={{ fontWeight: 500, color: linkColor, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{t.buyer}<CopyBtn value={t.buyer} size={11} /></span></td>
+                <td style={td}><span style={{ color: C.textMuted, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{t.seller}<CopyBtn value={t.seller} size={11} /></span></td>
                 <td style={td}><span style={{ fontWeight: 600, color: linkColor }}>${t.amount.toLocaleString()}</span></td>
                 <td style={td}><Badge status={t.status} /></td>
                 <td style={td}><span style={{ color: C.textMuted, fontSize: '12px' }}>{t.date}</span></td>
@@ -141,8 +141,8 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             <thead><tr><SH label="Author" sortKey="author" /><SH label="About" sortKey="target" /><SH label="Rating" sortKey="rating" /><th style={th}><SortBtn label="Preview" sortKey="content" current={sort} onSort={onSort} /></th><SH label="Date" sortKey="date" /><th style={{ ...th, padding: '10px 16px' }}>Flagged</th><th style={{ ...th, padding: '10px 16px' }} /></tr></thead>
             <tbody>{items.map((r: any) => (
               <tr key={r.id} style={{ cursor: 'pointer', backgroundColor: r.flagged ? flagBg : 'transparent' }} onClick={() => onSelect(r)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = r.flagged ? flagBg : 'transparent')}>
-                <td style={td}><span style={{ fontWeight: 500, color: linkColor }}>{r.author}</span></td>
-                <td style={td}><span style={{ color: C.textMuted }}>{r.target}</span></td>
+                <td style={td}><span style={{ fontWeight: 500, color: linkColor, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{r.author}<CopyBtn value={r.author} size={11} /></span></td>
+                <td style={td}><span style={{ color: C.textMuted, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{r.target}<CopyBtn value={r.target} size={11} /></span></td>
                 <td style={td}><span style={{ color: r.rating >= 4 ? '#2e7d32' : '#c62828', letterSpacing: '1px' }}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span></td>
                 <td style={{ ...td, maxWidth: '200px' }}><span style={{ color: C.textMuted, fontSize: '12px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.content}</span></td>
                 <td style={td}><span style={{ color: C.textMuted, fontSize: '12px' }}>{r.date}</span></td>
@@ -163,7 +163,7 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
               const unrevBg = c.status === 'flagged' && !c.reviewed ? flagBg : 'transparent';
               return (
                 <tr key={c.id} style={{ cursor: 'pointer', backgroundColor: unrevBg }} onClick={() => onSelect(c)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = unrevBg)}>
-                  <td style={td}><div style={{ fontWeight: 500, color: linkColor, fontSize: '13px' }}>{c.participants[0]}</div><div style={{ color: C.textMuted, fontSize: '12px' }}>{c.participants[1]}</div></td>
+                  <td style={td}><div style={{ fontWeight: 500, color: linkColor, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '3px' }}>{c.participants[0]}<CopyBtn value={c.participants[0]} size={10} /></div><div style={{ color: C.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '3px' }}>{c.participants[1]}<CopyBtn value={c.participants[1]} size={10} /></div></td>
                   <td style={{ ...td, maxWidth: '150px' }}><span style={{ color: C.textMuted, fontSize: '12px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.listing}</span></td>
                   <td style={td}><span style={{ color: C.textMuted }}>{c.message_count}</span></td>
                   <td style={td}><span style={{ color: C.textMuted, fontSize: '12px' }}>{new Date(c.last_message).toLocaleDateString()}</span></td>

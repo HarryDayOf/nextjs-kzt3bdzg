@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { Modal, DR, Btn, Badge, IdChip, RoleBadge, KWChip, NotesPanel, highlightKeywords, NAVY } from '../ui';
+import { Modal, DR, Btn, Badge, IdChip, RoleBadge, KWChip, NotesPanel, highlightKeywords, CopyBtn, NAVY } from '../ui';
 import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, type KWHit, type Role } from '../../../lib/types';
 
 // ─── USER MODAL ───────────────────────────────────────────────────────────────
@@ -24,18 +24,14 @@ export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUs
           <Badge status={user.status} />
           {(user.repeatFlags ?? 0) >= 2 && <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, backgroundColor: '#fdecea', color: '#c62828' }}>⚠ {user.repeatFlags} policy flags</span>}
         </div>
-        <DR label="User ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{user.id}</span>} />
-        <DR label="Tawk.to ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{user.tawk_id}</span>} />
-        <DR label="Email" value={user.email} />
+        <DR label="User ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{user.id}</span>} copyValue={user.id} />
+        <DR label="Tawk.to ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{user.tawk_id}</span>} copyValue={user.tawk_id} />
+        <DR label="Email" value={user.email} copyValue={user.email} />
         <DR label="Role" value={user.role} />
         <DR label="Joined" value={user.joined} />
         <DR label="Transactions" value={String(user.transactions)} />
         {user.role === 'vendor' && <>
           <DR label="Lifetime Revenue" value={`$${(user.revenue ?? 0).toLocaleString()}`} />
-          <DR label="Response Rate" value={<span style={{ color: (user.responseRate ?? 0) < 70 ? '#c62828' : '#2e7d32', fontWeight: 600 }}>{user.responseRate ?? 0}%</span>} />
-          <DR label="Booking Rate" value={`${user.bookingRate ?? 0}%`} />
-          <DR label="Cancellation Rate" value={<span style={{ color: (user.cancellationRate ?? 0) > 10 ? '#c62828' : '#374151', fontWeight: 600 }}>{user.cancellationRate ?? 0}%</span>} />
-          <DR label="Avg Rating" value={user.avgRating ? `${user.avgRating.toFixed(1)} ★` : '—'} />
         </>}
 
 
@@ -81,8 +77,8 @@ export function ListingModal({ listing, notes, onClose, onAction, onAddNote, cur
         ))}
       </div>
       {tab === 'info' && <>
-        <DR label="Listing ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{listing.id}</span>} />
-        <DR label="Vendor" value={listing.vendor} />
+        <DR label="Listing ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{listing.id}</span>} copyValue={listing.id} />
+        <DR label="Vendor" value={listing.vendor} copyValue={listing.vendor} />
         <DR label="Category" value={listing.category} />
         <DR label="Price" value={`$${listing.price.toLocaleString()}`} />
         <DR label="Status" value={<Badge status={listing.status} />} />
@@ -171,11 +167,11 @@ export function TransactionModal({ txn, notes, onClose, onAction, currentUser }:
         ))}
       </div>
       {tab === 'info' && <>
-        <DR label="Transaction ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{txn.id}</span>} />
-        <DR label="Stripe Payment ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{txn.stripe_id}</span>} />
-        <DR label="Buyer" value={txn.buyer} />
-        <DR label="Seller" value={txn.seller} />
-        <DR label="Listing" value={txn.listing} />
+        <DR label="Transaction ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{txn.id}</span>} copyValue={txn.id} />
+        <DR label="Stripe Payment ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{txn.stripe_id}</span>} copyValue={txn.stripe_id} />
+        <DR label="Buyer" value={txn.buyer} copyValue={txn.buyer} />
+        <DR label="Seller" value={txn.seller} copyValue={txn.seller} />
+        <DR label="Listing" value={txn.listing} copyValue={txn.listing} />
         <DR label="Amount" value={<span style={{ fontWeight: 700, fontSize: '15px' }}>${txn.amount.toLocaleString()}</span>} />
         <DR label="Status" value={<Badge status={txn.status} />} />
         <DR label="Date" value={txn.date} />
@@ -196,8 +192,8 @@ export function TransactionModal({ txn, notes, onClose, onAction, currentUser }:
             <div style={{ fontSize: '12px', color: '#9ca3af' }}>Opened: {txn.dispute_opened}</div>
           </div>
           <DR label="Amount at Risk" value={<span style={{ fontWeight: 700, color: '#c62828' }}>${txn.amount.toLocaleString()}</span>} />
-          <DR label="Buyer" value={txn.buyer} />
-          <DR label="Seller" value={txn.seller} />
+          <DR label="Buyer" value={txn.buyer} copyValue={txn.buyer} />
+          <DR label="Seller" value={txn.seller} copyValue={txn.seller} />
           <div style={{ marginTop: '16px', padding: '14px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #f3f4f6' }}>
             <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: 600, marginBottom: '8px' }}>RESOLUTION OPTIONS</div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -226,9 +222,9 @@ export function ReviewModal({ review, notes, onClose, onAction, currentUser }: a
         ))}
       </div>
       {tab === 'info' && <>
-        <DR label="Author" value={review.author} />
-        <DR label="Target" value={review.target} />
-        <DR label="Listing" value={review.listing} />
+        <DR label="Author" value={review.author} copyValue={review.author} />
+        <DR label="Target" value={review.target} copyValue={review.target} />
+        <DR label="Listing" value={review.listing} copyValue={review.listing} />
         <DR label="Rating" value={<span style={{ color: review.rating >= 4 ? '#2e7d32' : '#c62828', fontWeight: 600, fontSize: '16px' }}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</span>} />
         <DR label="Date" value={review.date} />
         <DR label="Flagged" value={review.flagged ? <Badge status="flagged" /> : 'No'} />
@@ -268,7 +264,7 @@ export function ConversationModal({ conv, notes, onClose, onAction, currentUser 
           {[['Participants', conv.participants.join(' + ')], ['Listing', conv.listing], ['Transaction', conv.txn_id ?? '—']].map(([l, v]) => (
             <div key={l} style={{ backgroundColor: '#f9fafb', borderRadius: '8px', padding: '10px 14px', border: '1px solid #f3f4f6' }}>
               <div style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 600, marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{l}</div>
-              <div style={{ fontSize: '12px', color: NAVY, fontWeight: 500 }}>{v}</div>
+              <div style={{ fontSize: '12px', color: NAVY, fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>{v}{v !== '—' && <CopyBtn value={v as string} size={11} />}</div>
             </div>
           ))}
         </div>

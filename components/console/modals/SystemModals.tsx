@@ -11,7 +11,6 @@ function RptIcon({ id, color = 'currentColor' }: { id: string; color?: string })
   if (id === 'transactions') return <svg {...p}><path d="M7 16V4m0 0L3 8m4-4 4 4"/><path d="M17 8v12m0 0 4-4m-4 4-4-4"/></svg>;
   if (id === 'flags') return <svg {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
   if (id === 'users') return <svg {...p}><circle cx="9" cy="7" r="4"/><path d="M2 21v-1a7 7 0 0 1 14 0v1"/></svg>;
-  if (id === 'vendors') return <svg {...p}><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>;
   return null;
 }
 
@@ -32,7 +31,6 @@ export function ReportsModal({ data, onClose, role }: { data: any; onClose: () =
     { id: 'transactions', label: 'Transactions' },
     { id: 'flags', label: 'Flagged Conversations' },
     { id: 'users', label: 'Users' },
-    { id: 'vendors', label: 'Vendor Performance' },
   ];
 
   return (
@@ -143,24 +141,6 @@ export function ReportsModal({ data, onClose, role }: { data: any; onClose: () =
             </div>
           )}
 
-          {active === 'vendors' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>Vendor Performance</div>
-                <Btn small label="Export CSV" icon="↓" onClick={() => downloadCSV(data.users.filter((u: any) => u.role === 'vendor').map((u: any) => ({ Name: u.name, Status: u.status, 'Response Rate': u.responseRate + '%', 'Booking Rate': u.bookingRate + '%', 'Cancellation Rate': u.cancellationRate + '%', 'Avg Rating': u.avgRating, 'Repeat Flags': u.repeatFlags, ...(showMoney ? { Revenue: '$' + u.revenue } : {}) })), 'dayof-vendor-performance.csv')} />
-              </div>
-              <ReportTable rows={data.users.filter((u: any) => u.role === 'vendor')} columns={[
-                { key: 'name', label: 'Vendor' },
-                { key: 'status', label: 'Status', render: (v: string) => <Badge status={v} /> },
-                { key: 'responseRate', label: 'Response', render: (v: number) => <span style={{ color: v < 70 ? '#c62828' : '#2e7d32', fontWeight: 600 }}>{v}%</span> },
-                { key: 'bookingRate', label: 'Booking', render: (v: number) => `${v}%` },
-                { key: 'cancellationRate', label: 'Cancel', render: (v: number) => <span style={{ color: v > 10 ? '#c62828' : '#374151', fontWeight: v > 10 ? 600 : 400 }}>{v}%</span> },
-                { key: 'avgRating', label: 'Rating', render: (v: number) => v ? <span style={{ color: v < 3 ? '#c62828' : '#374151' }}>{v.toFixed(1)} ★</span> : '—' },
-                { key: 'repeatFlags', label: 'Flags', render: (v: number) => v > 0 ? <span style={{ color: '#c62828', fontWeight: 700 }}>{v}</span> : '0' },
-                ...(showMoney ? [{ key: 'revenue', label: 'Revenue', render: (v: number) => `$${(v || 0).toLocaleString()}` }] : []),
-              ]} />
-            </div>
-          )}
 
         </div>
       </div>

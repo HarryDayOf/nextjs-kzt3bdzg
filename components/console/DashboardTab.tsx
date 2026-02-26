@@ -185,28 +185,6 @@ export function DashboardTab({ data, onNavigate, role, darkMode }: { data: any; 
           }
         </div>
 
-        {/* VENDOR PERFORMANCE SNAPSHOT */}
-        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: linkColor, marginBottom: '14px' }}>Vendor Performance Snapshot</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
-            <thead>
-              <tr>{['Vendor', 'Response', 'Booking', 'Cancel', 'Rating'].map(h => (
-                <th key={h} style={{ textAlign: 'left', fontSize: '10px', color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', paddingBottom: '8px' }}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {users.filter((u: any) => u.role === 'vendor').map((u: any) => (
-                <tr key={u.id} onClick={() => onNavigate('users')} style={{ cursor: 'pointer', borderTop: '1px solid ' + C.borderLight }}>
-                  <td style={{ padding: '8px 0', fontWeight: 500, color: linkColor }}>{u.name.length > 16 ? u.name.slice(0, 16) + '...' : u.name}</td>
-                  <td style={{ padding: '8px 0', color: (u.responseRate ?? 0) < 70 ? '#c62828' : '#2e7d32' }}>{u.responseRate ?? 0}%</td>
-                  <td style={{ padding: '8px 0', color: C.text }}>{u.bookingRate ?? 0}%</td>
-                  <td style={{ padding: '8px 0', color: (u.cancellationRate ?? 0) > 10 ? '#c62828' : C.text }}>{u.cancellationRate ?? 0}%</td>
-                  <td style={{ padding: '8px 0', color: (u.avgRating ?? 0) < 3 ? '#c62828' : C.text }}>{u.avgRating ? u.avgRating.toFixed(1) + ' ★' : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
       </div>
     </div>
