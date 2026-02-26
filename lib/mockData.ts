@@ -17,7 +17,7 @@ const _coupleFirsts = ['Emma','Liam','Olivia','Noah','Ava','Ethan','Sophia','Jac
 const _coupleLasts = ['Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts'];
 const _domains = ['gmail.com','icloud.com','outlook.com','yahoo.com'];
 const _vendorDomains = ['.co','.com','.studio','.events'];
-const _statuses: User['status'][] = ['active','active','active','active','active','active','active','suspended','pending','probation'];
+const _statuses: User['status'][] = ['active','active','active','active','active','active','active','active','active','active','active','suspended','pending','probation'];
 function _uid(i: number) { const h = (n: number) => n.toString(16).padStart(8, '0'); return `${h(i * 2654435761 >>> 0)}-${h(i * 40503 >>> 0).slice(0,4)}-4${h(i * 12345 >>> 0).slice(1,4)}-${h(i * 98765 >>> 0).slice(0,4)}-${h(i * 777 + 42 >>> 0).slice(0,4)}${h(i * 333 >>> 0)}`; }
 function _genUsers(): User[] {
   const seed: User[] = [
@@ -30,7 +30,7 @@ function _genUsers(): User[] {
   ];
   const extra: User[] = [];
   let vi = 3, ci = 2;
-  for (let i = 0; i < 144; i++) {
+  for (let i = 0; i < 74; i++) {
     const isVendor = i % 3 !== 0;
     const idx = i;
     const id = _uid(i + 100);
@@ -57,8 +57,8 @@ function _genUsers(): User[] {
       const name = `${f1} & ${f2} ${last}`;
       const email = `${f1.toLowerCase()}.${last.toLowerCase()}@${_domains[idx % _domains.length]}`;
       const txns = Math.floor(Math.abs(Math.sin(idx * 2.71) * 6));
-      const coupleStatus = idx % 25 === 0 ? 'suspended' : idx % 30 === 0 ? 'probation' : status === 'pending' ? 'active' : status === 'probation' ? 'active' : status;
-      const coupleFlags = coupleStatus === 'suspended' ? 2 + (idx % 2) : coupleStatus === 'probation' ? 1 : idx % 18 === 0 ? 1 : 0;
+      const coupleStatus = idx % 50 === 0 ? 'suspended' : idx % 60 === 0 ? 'probation' : status === 'pending' ? 'active' : status === 'probation' ? 'active' : status;
+      const coupleFlags = coupleStatus === 'suspended' ? 2 + (idx % 2) : coupleStatus === 'probation' ? 1 : idx % 35 === 0 ? 1 : 0;
       extra.push({ id, name, email, role: 'couple', status: coupleStatus, joined, listings: 0, transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: 0, repeatFlags: coupleFlags });
     }
   }
@@ -108,8 +108,8 @@ function _enrichUsers(users: User[]): User[] {
 }
 
 function _assignDuplicates(users: User[]): void {
-  // Create 12 IP clusters — pairs/triples sharing same signup IP (simulates ban evasion, shared household, etc.)
-  for (let c = 0; c < 12; c++) {
+  // Create 6 IP clusters — pairs/triples sharing same signup IP (simulates ban evasion, shared household, etc.)
+  for (let c = 0; c < 6; c++) {
     const a = 8 + c * 12; const b = a + 4;
     const sharedIp = `98.142.${50 + c}.${200 + c}`;
     [a, b, ...(c % 3 === 0 ? [a + 8] : [])].forEach(idx => {
@@ -120,8 +120,8 @@ function _assignDuplicates(users: User[]): void {
       }
     });
   }
-  // Create 8 device fingerprint clusters — same device used for multiple accounts
-  for (let c = 0; c < 8; c++) {
+  // Create 4 device fingerprint clusters — same device used for multiple accounts
+  for (let c = 0; c < 4; c++) {
     const a = 6 + c * 18; const b = a + 6;
     const sharedFp = `fp_dup${String(c).padStart(2, '0')}${((c * 0xabcdef01) >>> 0).toString(16).slice(0, 6)}`;
     [a, b].forEach(idx => { if (idx < users.length) users[idx].deviceFingerprint = sharedFp; });
@@ -193,14 +193,14 @@ function _genListings(): Listing[] {
     ] },
   ];
   const extra: Listing[] = [];
-  for (let i = 0; i < 144; i++) {
+  for (let i = 0; i < 74; i++) {
     const v = _V[i % _V.length];
     const cat = _cats[i % _cats.length];
     const titles = _catTitles[cat];
     const titleBase = titles[i % titles.length];
     const dup = Math.floor(i / titles.length);
     const title = dup > 0 ? `${titleBase} #${dup + 1}` : titleBase;
-    const status: Listing['status'] = i % 12 === 0 ? 'suspended' : i % 15 === 0 ? 'pending_review' : 'active';
+    const status: Listing['status'] = i % 20 === 0 ? 'suspended' : i % 25 === 0 ? 'pending_review' : 'active';
     const hasDocs = status === 'pending_review' || i % 5 === 0;
     const slug = v.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const documents: VendorDocument[] | undefined = hasDocs ? _docDefs.slice(0, 2 + (i % 3)).map((d, di) => {
@@ -244,7 +244,7 @@ const _disputeReasons = [
   'Late arrival caused significant disruption to the wedding timeline.',
   'Vendor shared our private wedding photos publicly without permission.',
 ];
-const _txnStatuses: Transaction['status'][] = ['completed','completed','completed','completed','completed','completed','completed','completed','disputed','disputed','refunded','pending','pending'];
+const _txnStatuses: Transaction['status'][] = ['completed','completed','completed','completed','completed','completed','completed','completed','completed','completed','completed','disputed','refunded','pending'];
 
 function _genTransactions(): Transaction[] {
   const seed: Transaction[] = [
@@ -256,7 +256,7 @@ function _genTransactions(): Transaction[] {
     { id: 'txn_5Lm3Kn7Jo1Ip9Hq', stripe_id: 'pi_5LmK8NHj3mQsRoWt6vBt2Ydh', buyer: 'Jordan & Priya Ellis', buyer_id: 'c7d45e81', seller: 'Bloom & Co Florals', seller_id: 'a4f78c29', listing: 'Garden Floral Package', listing_id: 'lst_7Tz3J8nLwS1uXkBe', amount: 1800, status: 'completed', date: '2025-01-05', disputed: false },
   ];
   const extra: Transaction[] = [];
-  for (let i = 0; i < 144; i++) {
+  for (let i = 0; i < 74; i++) {
     const lst = MOCK_LISTINGS[i % MOCK_LISTINGS.length];
     const seller = _V.find(v => v.id === lst.vendor_id) || _V[i % _V.length];
     const buyer = _CO[i % _CO.length];
@@ -328,11 +328,14 @@ function _genReviews(): Review[] {
     { id: 'rev_7Gh2Ji6Kl0Mn4Op', author: 'Jordan & Priya Ellis', author_id: 'c7d45e81', target: 'The Sound Co.', target_id: 'f1a23b45', listing: 'Full Band Experience', listing_id: 'lst_3Qr8H5kNpM2wBjCs', rating: 5, content: 'Incredible energy all night. The band read the room perfectly. Every guest was on the floor.', date: '2025-02-08', flagged: false },
   ];
   const extra: Review[] = [];
-  for (let i = 0; i < 146; i++) {
+  // Build a weighted pool: ~90% non-flagged reviews
+  const _goodReviews = _reviewPool.filter(r => !r.flagged);
+  const _badReviews = _reviewPool.filter(r => r.flagged);
+  for (let i = 0; i < 76; i++) {
     const lst = MOCK_LISTINGS[i % MOCK_LISTINGS.length];
     const target = _V.find(v => v.id === lst.vendor_id) || _V[i % _V.length];
     const author = _CO[i % _CO.length];
-    const tpl = _reviewPool[i % _reviewPool.length];
+    const tpl = i % 10 === 0 ? _badReviews[i % _badReviews.length] : _goodReviews[i % _goodReviews.length];
     const mo = 1 + (i % 12);
     const day = 1 + (i % 28);
     extra.push({
@@ -575,11 +578,14 @@ function _genConversations(): Conversation[] {
     },
   ];
   const extra: Conversation[] = [];
-  for (let i = 0; i < 146; i++) {
+  // Build a weighted selection: ~80% clean conversations
+  const _cleanScripts = _convScripts.filter(s => s.status === 'clean');
+  const _flaggedScripts = _convScripts.filter(s => s.status === 'flagged');
+  for (let i = 0; i < 76; i++) {
     const lst = MOCK_LISTINGS[i % MOCK_LISTINGS.length];
     const vendor = _V.find(v => v.id === lst.vendor_id) || _V[i % _V.length];
     const couple = _CO[i % _CO.length];
-    const script = _convScripts[i % _convScripts.length];
+    const script = i % 5 === 0 ? _flaggedScripts[i % _flaggedScripts.length] : _cleanScripts[i % _cleanScripts.length];
     const reviewed = script.status === 'flagged' && i % 4 === 0;
     // Find a matching transaction if one exists
     const txn = MOCK_TRANSACTIONS.find(t => t.listing_id === lst.id && t.buyer_id === couple.id.slice(0, 8));
@@ -672,11 +678,11 @@ function _genNotes(): Note[] {
     noteIdx++;
   };
 
-  flaggedUsers.slice(0, 25).forEach(u => addNote('user', u.id, u.name));
-  disputedTxns.slice(0, 25).forEach(t => addNote('transaction', t.id, t.id.slice(0, 12)));
-  flaggedRevs.slice(0, 15).forEach(r => addNote('review', r.id, r.author));
-  flaggedConvs.slice(0, 15).forEach(c => addNote('conversation', c.id, c.id.slice(0, 12)));
-  pendingLsts.slice(0, 15).forEach(l => addNote('listing', l.id, l.title));
+  flaggedUsers.slice(0, 8).forEach(u => addNote('user', u.id, u.name));
+  disputedTxns.slice(0, 8).forEach(t => addNote('transaction', t.id, t.id.slice(0, 12)));
+  flaggedRevs.slice(0, 5).forEach(r => addNote('review', r.id, r.author));
+  flaggedConvs.slice(0, 5).forEach(c => addNote('conversation', c.id, c.id.slice(0, 12)));
+  pendingLsts.slice(0, 5).forEach(l => addNote('listing', l.id, l.title));
 
   return [...seed, ...extra];
 }
@@ -714,15 +720,15 @@ function _genAudit(): AuditEntry[] {
   // Generate audit entries across entity types
   const entities: { type: string; id: string; label: string }[] = [];
   // Add suspended/probation users
-  MOCK_USERS.filter(u => u.status === 'suspended' || u.status === 'probation').slice(0, 20).forEach(u => entities.push({ type: 'user', id: u.id.slice(0, 8), label: u.name }));
+  MOCK_USERS.filter(u => u.status === 'suspended' || u.status === 'probation').slice(0, 8).forEach(u => entities.push({ type: 'user', id: u.id.slice(0, 8), label: u.name }));
   // Add disputed/refunded transactions
-  MOCK_TRANSACTIONS.filter(t => t.status === 'disputed' || t.status === 'refunded').slice(0, 20).forEach(t => entities.push({ type: 'transaction', id: t.id, label: `${t.id.slice(0, 12)}...` }));
+  MOCK_TRANSACTIONS.filter(t => t.status === 'disputed' || t.status === 'refunded').slice(0, 8).forEach(t => entities.push({ type: 'transaction', id: t.id, label: `${t.id.slice(0, 12)}...` }));
   // Add flagged reviews
-  MOCK_REVIEWS.filter(r => r.flagged).slice(0, 15).forEach(r => entities.push({ type: 'review', id: r.id, label: `Review by ${r.author}` }));
+  MOCK_REVIEWS.filter(r => r.flagged).slice(0, 5).forEach(r => entities.push({ type: 'review', id: r.id, label: `Review by ${r.author}` }));
   // Add flagged conversations
-  MOCK_CONVERSATIONS.filter(c => c.status === 'flagged').slice(0, 15).forEach(c => entities.push({ type: 'conversation', id: c.id, label: `${c.id.slice(0, 12)}...` }));
+  MOCK_CONVERSATIONS.filter(c => c.status === 'flagged').slice(0, 5).forEach(c => entities.push({ type: 'conversation', id: c.id, label: `${c.id.slice(0, 12)}...` }));
   // Add pending/suspended listings
-  MOCK_LISTINGS.filter(l => l.status !== 'active').slice(0, 15).forEach(l => entities.push({ type: 'listing', id: l.id, label: l.title }));
+  MOCK_LISTINGS.filter(l => l.status !== 'active').slice(0, 5).forEach(l => entities.push({ type: 'listing', id: l.id, label: l.title }));
 
   entities.forEach((ent, i) => {
     const tpl = _auditActions[i % _auditActions.length];

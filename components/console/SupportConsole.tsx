@@ -341,12 +341,12 @@ export default function SupportConsole({ user }: { user: any }) {
   const totalDocCount = listings.reduce((sum: number, l: any) => sum + ((l.documents ?? []).length), 0);
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', alert: 0 },
-    { id: 'documents', label: 'Documents', count: totalDocCount, alert: pendingDocCount },
-    { id: 'users', label: 'Users', count: users.length, alert: 0 },
-    { id: 'listings', label: 'Listings', count: listings.length, alert: 0 },
-    { id: 'transactions', label: 'Transactions', count: transactions.length, alert: 0 },
-    { id: 'reviews', label: 'Reviews', count: reviews.length, alert: 0 },
-    { id: 'conversations', label: 'Conversations', count: convs.length, alert: unrev },
+    { id: 'documents', label: 'Documents', alert: pendingDocCount },
+    { id: 'users', label: 'Users', alert: 0 },
+    { id: 'listings', label: 'Listings', alert: 0 },
+    { id: 'transactions', label: 'Transactions', alert: 0 },
+    { id: 'reviews', label: 'Reviews', alert: 0 },
+    { id: 'conversations', label: 'Conversations', alert: unrev },
   ];
 
   return (
@@ -432,7 +432,6 @@ export default function SupportConsole({ user }: { user: any }) {
             <button key={t.id} onClick={() => changeTab(t.id)} style={{ padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: active ? ac : ic, borderBottom: active ? `2px solid ${darkMode ? '#60a5fa' : NAVY}` : '2px solid transparent', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
               <TabIcon id={t.id} color={active ? ac : ic} />
               {t.label}
-              {'count' in t && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: active ? (darkMode ? '#334155' : NAVY) : C.surfaceAlt, color: active ? '#fff' : C.textMuted, fontWeight: 600 }}>{t.count}</span>}
               {t.alert > 0 && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: '#fdecea', color: '#c62828', fontWeight: 700 }}>{t.alert}</span>}
             </button>
           );
