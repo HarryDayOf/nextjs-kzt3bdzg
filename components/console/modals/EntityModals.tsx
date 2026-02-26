@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { Modal, DR, Btn, Badge, IdChip, RoleBadge, KWChip, NotesPanel, highlightKeywords, NAVY } from './ui';
+import { Modal, DR, Btn, Badge, IdChip, RoleBadge, KWChip, NotesPanel, highlightKeywords, NAVY } from '../ui';
 import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, type KWHit, type Role } from '../../lib/types';
 
 // ─── USER MODAL ───────────────────────────────────────────────────────────────

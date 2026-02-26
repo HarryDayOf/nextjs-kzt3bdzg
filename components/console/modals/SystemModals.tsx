@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import { Modal, Btn, Badge, IdChip, RoleBadge, StatCard, KWChip, NAVY } from '../ui';
-import { detectKeywords, uniqueHits, type KWHit, downloadCSV, printTable } from '../../../lib/types';
+import { detectKeywords, uniqueHits, type KWHit, downloadCSV, printTable } from '../../lib/types';
 
 // ─── REPORTS MODAL ────────────────────────────────────────────────────────────
 export function ReportsModal({ data, onClose }: { data: any; onClose: () => void }) {
