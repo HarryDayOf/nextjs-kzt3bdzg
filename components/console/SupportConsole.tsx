@@ -175,7 +175,7 @@ export default function SupportConsole({ user }: { user: any }) {
   const doExportCSV = () => {
     const maps: Record<string, () => any[]> = {
       users: () => filteredUsers.map(u => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Joined: u.joined, Transactions: u.transactions, RepeatFlags: u.repeatFlags })),
-      listings: () => filteredListings.map(l => ({ ID: l.id, Title: l.title, Vendor: l.vendor, Category: l.category, Price: l.price, Status: l.status, Views: l.views, Bookings: l.bookings })),
+      listings: () => filteredListings.map(l => ({ ID: l.id, Title: l.title, Vendor: l.vendor, Category: l.category, Price: l.price, Status: l.status })),
       transactions: () => filteredTransactions.map(t => ({ ID: t.id, StripeID: t.stripe_id, Buyer: t.buyer, Seller: t.seller, Amount: t.amount, Status: t.status, Date: t.date, Disputed: t.disputed ? 'Yes' : 'No' })),
       reviews: () => filteredReviews.map(r => ({ ID: r.id, Author: r.author, Target: r.target, Rating: r.rating, Content: r.content, Date: r.date, Flagged: r.flagged ? 'Yes' : 'No' })),
       conversations: () => filteredConvs.map(c => ({ ID: c.id, P1: c.participants[0], P2: c.participants[1], Listing: c.listing, Status: c.status, Reviewed: c.reviewed ? 'Yes' : 'No' })),

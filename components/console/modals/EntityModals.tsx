@@ -64,7 +64,6 @@ export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUs
 // ─── LISTING MODAL ────────────────────────────────────────────────────────────
 export function ListingModal({ listing, notes, onClose, onAction, onAddNote, currentUser }: any) {
   const [tab, setTab] = useState<'info' | 'documents' | 'notes'>('info');
-  const ctr = listing.inquiries > 0 ? ((listing.bookings / listing.inquiries) * 100).toFixed(0) : '0';
   const pendingDocs = (listing.documents ?? []).filter((d: any) => d.status === 'pending').length;
   return (
     <Modal title={listing.title} subtitle={listing.id} onClose={onClose} wide>
@@ -83,10 +82,6 @@ export function ListingModal({ listing, notes, onClose, onAction, onAddNote, cur
         <DR label="Price" value={`$${listing.price.toLocaleString()}`} />
         <DR label="Status" value={<Badge status={listing.status} />} />
         <DR label="Created" value={listing.created} />
-        <DR label="Views" value={String(listing.views ?? 0)} />
-        <DR label="Inquiries" value={String(listing.inquiries ?? 0)} />
-        <DR label="Bookings" value={String(listing.bookings ?? 0)} />
-        <DR label="Inquiry → Booking" value={<span style={{ fontWeight: 600, color: parseInt(ctr) < 20 ? '#c62828' : '#2e7d32' }}>{ctr}%</span>} />
         <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
           <Btn variant="primary" label="Edit Listing" onClick={() => onAction('edit', listing)} />
           <Btn variant="success" label="Approve" onClick={() => onAction('approve', listing)} />

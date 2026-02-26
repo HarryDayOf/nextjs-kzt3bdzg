@@ -84,7 +84,7 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             <thead><tr><SH label="Name" sortKey="name" /><SH label="Email" sortKey="email" /><SH label="Role" sortKey="role" /><SH label="Status" sortKey="status" /><SH label="Joined" sortKey="joined" /><SH label="Txns" sortKey="transactions" /><th style={{ ...th, padding: '10px 16px' }}>Flags</th><th style={{ ...th, padding: '10px 16px' }} /></tr></thead>
             <tbody>{items.map((u: any) => (
               <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => onSelect(u)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                <td style={td}><div style={{ fontWeight: 500, color: linkColor }}>{u.name}</div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '3px' }}>{u.id.slice(0, 8)}...<CopyBtn value={u.id} size={10} /></div></td>
+                <td style={td}><div style={{ fontWeight: 500, color: linkColor, display: 'flex', alignItems: 'center', gap: '3px' }}>{u.name}<CopyBtn value={u.name} size={11} /></div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '3px' }}>{u.id.slice(0, 8)}...<CopyBtn value={u.id} size={10} /></div></td>
                 <td style={td}><span style={{ color: C.textMuted, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{u.email}<CopyBtn value={u.email} size={11} /></span></td>
                 <td style={td}><span style={{ fontSize: '11px', color: C.textMuted, backgroundColor: C.surfaceAlt, padding: '2px 8px', borderRadius: '4px', fontWeight: 500 }}>{u.role}</span></td>
                 <td style={td}><Badge status={u.status} /></td>
@@ -99,22 +99,17 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
 
         {tab === 'listings' && (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead><tr><SH label="Title" sortKey="title" /><SH label="Vendor" sortKey="vendor" /><SH label="Category" sortKey="category" /><SH label="Price" sortKey="price" /><SH label="Status" sortKey="status" /><SH label="Views" sortKey="views" /><SH label="Booking Rate" sortKey="bookings" /><th style={{ ...th, padding: '10px 16px' }} /></tr></thead>
-            <tbody>{items.map((l: any) => {
-              const ctr = (l.inquiries ?? 0) > 0 ? Math.round((l.bookings / l.inquiries) * 100) : 0;
-              return (
+            <thead><tr><SH label="Title" sortKey="title" /><SH label="Vendor" sortKey="vendor" /><SH label="Category" sortKey="category" /><SH label="Price" sortKey="price" /><SH label="Status" sortKey="status" /><th style={{ ...th, padding: '10px 16px' }} /></tr></thead>
+            <tbody>{items.map((l: any) => (
                 <tr key={l.id} style={{ cursor: 'pointer' }} onClick={() => onSelect(l)} onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                  <td style={td}><div style={{ fontWeight: 500, color: linkColor }}>{l.title}</div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '3px' }}>{l.id}<CopyBtn value={l.id} size={10} /></div></td>
-                  <td style={td}><span style={{ color: C.textMuted }}>{l.vendor}</span></td>
+                  <td style={td}><div style={{ fontWeight: 500, color: linkColor, display: 'flex', alignItems: 'center', gap: '3px' }}>{l.title}<CopyBtn value={l.title} size={11} /></div><div style={{ fontSize: '10px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '3px' }}>{l.id}<CopyBtn value={l.id} size={10} /></div></td>
+                  <td style={td}><span style={{ color: C.textMuted, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>{l.vendor}<CopyBtn value={l.vendor} size={11} /></span></td>
                   <td style={td}><span style={{ fontSize: '11px', color: C.textMuted, backgroundColor: C.surfaceAlt, padding: '2px 8px', borderRadius: '4px', fontWeight: 500 }}>{l.category}</span></td>
                   <td style={td}><span style={{ fontWeight: 500 }}>${l.price.toLocaleString()}</span></td>
                   <td style={td}><Badge status={l.status} /></td>
-                  <td style={td}><span style={{ color: C.textMuted }}>{l.views ?? 0}</span></td>
-                  <td style={td}><span style={{ color: ctr < 20 ? '#c62828' : '#2e7d32', fontWeight: ctr < 20 ? 600 : 400 }}>{ctr}%</span></td>
                   <td style={td}><span style={{ color: C.textFaint, fontSize: '12px' }}>›</span></td>
                 </tr>
-              );
-            })}</tbody>
+            ))}</tbody>
           </table>
         )}
 
