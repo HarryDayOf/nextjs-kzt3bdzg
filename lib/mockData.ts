@@ -8,14 +8,59 @@ export const MOCK_CONSOLE_USERS: ConsoleUser[] = [
   { id: 'cu_5', name: 'Fabeha', email: 'fabeha@dayof.com', role: 'readonly', active: true, joined: '2024-11-01', lastLogin: '2025-02-20T10:00:00Z' },
 ];
 
-export const MOCK_USERS: User[] = [
-  { id: '6f3a2c1e-84b7-4d9f-a312-1c8e5f2b7a04', name: 'Sarah Chen', email: 'sarah.chen@bloomday.co', role: 'vendor', status: 'active', joined: '2024-11-01', listings: 3, transactions: 12, tawk_id: 'tawk_6f3a2c1e', revenue: 4600, responseRate: 94, bookingRate: 68, cancellationRate: 2, avgRating: 4.9, repeatFlags: 0 },
-  { id: 'b2e91d73-3f0c-4a8e-b654-9d7c1a3e5f28', name: 'Marcus Webb', email: 'marcus.webb@gmail.com', role: 'couple', status: 'active', joined: '2025-01-15', listings: 0, transactions: 2, tawk_id: 'tawk_b2e91d73', revenue: 0, responseRate: 0, bookingRate: 0, cancellationRate: 0, avgRating: 0, repeatFlags: 0 },
-  { id: 'a4f78c29-9e1b-4c6d-8a53-2f0e7b4d1c96', name: 'Bloom & Co Florals', email: 'hello@bloomco.com', role: 'vendor', status: 'suspended', joined: '2024-09-10', listings: 7, transactions: 31, tawk_id: 'tawk_a4f78c29', revenue: 18200, responseRate: 61, bookingRate: 41, cancellationRate: 18, avgRating: 2.1, repeatFlags: 3 },
-  { id: 'c7d45e81-2a9f-4b3c-96e7-5f1d8a0b2e34', name: 'Jordan & Priya Ellis', email: 'jordan.priya@icloud.com', role: 'couple', status: 'active', joined: '2025-02-01', listings: 0, transactions: 1, tawk_id: 'tawk_c7d45e81', revenue: 0, responseRate: 0, bookingRate: 0, cancellationRate: 0, avgRating: 0, repeatFlags: 0 },
-  { id: 'e9b12f47-7c3d-4e5a-b891-0a6c2f8d4e73', name: 'Magnolia Events', email: 'info@magnoliaevents.com', role: 'vendor', status: 'pending', joined: '2025-02-20', listings: 0, transactions: 0, tawk_id: 'tawk_e9b12f47', revenue: 0, responseRate: 0, bookingRate: 0, cancellationRate: 0, avgRating: 0, repeatFlags: 0 },
-  { id: 'f1a23b45-6c78-9d01-e234-5f67a8b9c0d1', name: 'The Sound Co.', email: 'booking@thesoundco.com', role: 'vendor', status: 'active', joined: '2024-10-05', listings: 4, transactions: 22, tawk_id: 'tawk_f1a23b45', revenue: 12400, responseRate: 88, bookingRate: 72, cancellationRate: 4, avgRating: 4.7, repeatFlags: 0 },
-];
+// ─── USER GENERATOR ─────────────────────────────────────────────────────────
+const _vendorNames = ['Sarah Chen','Bloom & Co Florals','Magnolia Events','The Sound Co.','Golden Hour Photography','Wildflower Studio','Pine & Petal','Harmony Strings Quartet','Sage Catering Co.','Velvet Touch Florals','Captured Moments','Rosewood Events','Sunlit Films','The Cake Collective','Dapper Day Suits','Sweet Serenade Band','Lucky Star DJ','Enchanted Gardens','Table for Two Catering','Urban Frame Photography','Belle Fleur Design','Rhythm & Vine Band','Twilight Videography','Artisan Cake Studio','Petal & Thorn','Evergreen Coordination','Lush Events Co.','Focal Point Photography','Blue Dahlia Florals','Silver Lining Catering','Amber Light Films','The Hive Collective','Meadow & Moss','Peak Performance DJ','First Dance Studios','Bloom Theory','Copper Kettle Catering','Signature Strings','Vista Photography','Sugarcoat Bakery','Fern & Fig Events','Reverie Films','Ivory & Vine','Bassline Entertainment','Pollen Studio','Rustic Roots Catering','Nova Flash Photography','Petaluma Flowers','Echo Chamber DJ','True Color Films'];
+const _coupleFirsts = ['Emma','Liam','Olivia','Noah','Ava','Ethan','Sophia','Jackson','Isabella','Aiden','Mia','Lucas','Charlotte','Mason','Amelia','Logan','Harper','James','Evelyn','Benjamin','Abigail','Elijah','Emily','William','Ella','Michael','Grace','Daniel','Chloe','Henry','Victoria','Sebastian','Lily','Jack','Aria','Owen','Nora','Alexander','Zoey','Carter','Riley','Jayden','Layla','John','Penelope','Luke','Hannah','Mateo','Lillian','David'];
+const _coupleLasts = ['Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts'];
+const _domains = ['gmail.com','icloud.com','outlook.com','yahoo.com'];
+const _vendorDomains = ['.co','.com','.studio','.events'];
+const _statuses: User['status'][] = ['active','active','active','active','active','active','active','suspended','pending','probation'];
+function _uid(i: number) { const h = (n: number) => n.toString(16).padStart(8, '0'); return `${h(i * 2654435761)}-${h(i * 40503).slice(0,4)}-4${h(i * 12345).slice(1,4)}-${h(i * 98765).slice(0,4)}-${h(i * 777 + 42).slice(0,4)}${h(i * 333)}`; }
+function _genUsers(): User[] {
+  const seed: User[] = [
+    { id: '6f3a2c1e-84b7-4d9f-a312-1c8e5f2b7a04', name: 'Sarah Chen', email: 'sarah.chen@bloomday.co', role: 'vendor', status: 'active', joined: '2024-11-01', listings: 3, transactions: 12, tawk_id: 'tawk_6f3a2c1e', revenue: 4600, repeatFlags: 0 },
+    { id: 'b2e91d73-3f0c-4a8e-b654-9d7c1a3e5f28', name: 'Marcus Webb', email: 'marcus.webb@gmail.com', role: 'couple', status: 'active', joined: '2025-01-15', listings: 0, transactions: 2, tawk_id: 'tawk_b2e91d73', revenue: 0, repeatFlags: 0 },
+    { id: 'a4f78c29-9e1b-4c6d-8a53-2f0e7b4d1c96', name: 'Bloom & Co Florals', email: 'hello@bloomco.com', role: 'vendor', status: 'suspended', joined: '2024-09-10', listings: 7, transactions: 31, tawk_id: 'tawk_a4f78c29', revenue: 18200, repeatFlags: 3 },
+    { id: 'c7d45e81-2a9f-4b3c-96e7-5f1d8a0b2e34', name: 'Jordan & Priya Ellis', email: 'jordan.priya@icloud.com', role: 'couple', status: 'active', joined: '2025-02-01', listings: 0, transactions: 1, tawk_id: 'tawk_c7d45e81', revenue: 0, repeatFlags: 0 },
+    { id: 'e9b12f47-7c3d-4e5a-b891-0a6c2f8d4e73', name: 'Magnolia Events', email: 'info@magnoliaevents.com', role: 'vendor', status: 'pending', joined: '2025-02-20', listings: 0, transactions: 0, tawk_id: 'tawk_e9b12f47', revenue: 0, repeatFlags: 0 },
+    { id: 'f1a23b45-6c78-9d01-e234-5f67a8b9c0d1', name: 'The Sound Co.', email: 'booking@thesoundco.com', role: 'vendor', status: 'active', joined: '2024-10-05', listings: 4, transactions: 22, tawk_id: 'tawk_f1a23b45', revenue: 12400, repeatFlags: 0 },
+  ];
+  const extra: User[] = [];
+  let vi = 3, ci = 2; // counters for unused vendor/couple names
+  for (let i = 0; i < 144; i++) {
+    const isVendor = i % 3 !== 0; // ~66% vendors, ~33% couples
+    const idx = i;
+    const id = _uid(i + 100);
+    const status = _statuses[idx % _statuses.length];
+    // joined date spread across 2024-06 → 2025-02
+    const month = 6 + (idx % 9);
+    const year = month > 12 ? 2025 : 2024;
+    const m = month > 12 ? month - 12 : month;
+    const day = 1 + (idx % 28);
+    const joined = `${year}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (isVendor) {
+      const name = _vendorNames[vi % _vendorNames.length];
+      vi++;
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '');
+      const dom = _vendorDomains[idx % _vendorDomains.length];
+      const email = `info@${slug}${dom}`;
+      const txns = Math.floor(Math.abs(Math.sin(idx * 3.14) * 40));
+      const rev = txns * (800 + (idx % 5) * 400);
+      extra.push({ id, name, email, role: 'vendor', status, joined, listings: 1 + (idx % 6), transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: rev, repeatFlags: status === 'suspended' ? 2 + (idx % 3) : status === 'probation' ? 1 : 0 });
+    } else {
+      const f1 = _coupleFirsts[ci % _coupleFirsts.length];
+      const f2 = _coupleFirsts[(ci + 7) % _coupleFirsts.length];
+      const last = _coupleLasts[ci % _coupleLasts.length];
+      ci++;
+      const name = `${f1} & ${f2} ${last}`;
+      const email = `${f1.toLowerCase()}.${last.toLowerCase()}@${_domains[idx % _domains.length]}`;
+      const txns = Math.floor(Math.abs(Math.sin(idx * 2.71) * 6));
+      extra.push({ id, name, email, role: 'couple', status: status === 'pending' ? 'active' : status === 'probation' ? 'active' : status, joined, listings: 0, transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: 0, repeatFlags: 0 });
+    }
+  }
+  return [...seed, ...extra];
+}
+export const MOCK_USERS: User[] = _genUsers();
 
 export const MOCK_LISTINGS: Listing[] = [
   { id: 'lst_4Hx9K2mPqR7vYnWd', title: 'Full-Day Wedding Photography', vendor: 'Sarah Chen', vendor_id: '6f3a2c1e-84b7-4d9f-a312-1c8e5f2b7a04', price: 3200, status: 'active', category: 'Photography', created: '2024-11-05', views: 412, inquiries: 38, bookings: 12 },

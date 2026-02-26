@@ -107,8 +107,17 @@ const BTN_VARIANTS: Record<string, { bg: string; border: string; color: string }
   warning: { bg: '#fff8e1', border: '#fcd34d', color: '#b45309' },
   ghost:   { bg: 'transparent', border: 'transparent', color: '#6b7280' },
 };
-export function Btn({ label, variant = 'default', onClick, small, disabled, icon }: { label: string; variant?: string; onClick: () => void; small?: boolean; disabled?: boolean; icon?: string }) {
-  const v = BTN_VARIANTS[variant] ?? BTN_VARIANTS.default;
+const BTN_VARIANTS_DARK: Record<string, { bg: string; border: string; color: string }> = {
+  default: { bg: '#334155', border: '#475569', color: '#e2e8f0' },
+  primary: { bg: '#3b82f6', border: '#3b82f6', color: '#fff' },
+  danger:  { bg: '#2a1215', border: '#7f1d1d', color: '#fca5a5' },
+  success: { bg: '#0a2415', border: '#166534', color: '#86efac' },
+  warning: { bg: '#2a1f05', border: '#854d0e', color: '#fcd34d' },
+  ghost:   { bg: 'transparent', border: 'transparent', color: '#94a3b8' },
+};
+export function Btn({ label, variant = 'default', onClick, small, disabled, icon, darkMode }: { label: string; variant?: string; onClick: () => void; small?: boolean; disabled?: boolean; icon?: string; darkMode?: boolean }) {
+  const palette = darkMode ? BTN_VARIANTS_DARK : BTN_VARIANTS;
+  const v = palette[variant] ?? palette.default;
   return (
     <button onClick={onClick} disabled={disabled}
       style={{ padding: small ? '5px 10px' : '8px 16px', backgroundColor: disabled ? '#f3f4f6' : v.bg, border: `1px solid ${disabled ? '#e5e7eb' : v.border}`, borderRadius: '8px', color: disabled ? '#9ca3af' : v.color, fontSize: small ? '12px' : '13px', cursor: disabled ? 'not-allowed' : 'pointer', fontWeight: 500, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
@@ -118,16 +127,17 @@ export function Btn({ label, variant = 'default', onClick, small, disabled, icon
 }
 
 // ─── MODAL ────────────────────────────────────────────────────────────────────
-export function Modal({ title, subtitle, children, onClose, wide, extraWide }: { title: string; subtitle?: string; children: React.ReactNode; onClose: () => void; wide?: boolean; extraWide?: boolean }) {
+export function Modal({ title, subtitle, children, onClose, wide, extraWide, darkMode }: { title: string; subtitle?: string; children: React.ReactNode; onClose: () => void; wide?: boolean; extraWide?: boolean; darkMode?: boolean }) {
+  const C = mkC(darkMode ?? false);
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,20,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={onClose}>
-      <div style={{ backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 20px 60px rgba(15,20,40,0.2)', padding: '32px', width: extraWide ? '960px' : wide ? '760px' : '580px', maxWidth: '97vw', maxHeight: '92vh', overflowY: 'auto' }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: darkMode ? 'rgba(0,0,0,0.6)' : 'rgba(15,20,40,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={onClose}>
+      <div style={{ backgroundColor: C.surface, borderRadius: '12px', boxShadow: darkMode ? '0 20px 60px rgba(0,0,0,0.5)' : '0 20px 60px rgba(15,20,40,0.2)', padding: '32px', width: extraWide ? '960px' : wide ? '760px' : '580px', maxWidth: '97vw', maxHeight: '92vh', overflowY: 'auto' }} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
           <div>
-            <div style={{ fontSize: '17px', fontWeight: 600, color: NAVY, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>{title}<CopyBtn value={title} size={15} /></div>
-            {subtitle && <div style={{ fontSize: '12px', color: '#9ca3af', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '4px' }}>{subtitle}<CopyBtn value={subtitle} size={11} /></div>}
+            <div style={{ fontSize: '17px', fontWeight: 600, color: C.text, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '6px' }}>{title}<CopyBtn value={title} size={15} /></div>
+            {subtitle && <div style={{ fontSize: '12px', color: C.textMuted, fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '4px' }}>{subtitle}<CopyBtn value={subtitle} size={11} /></div>}
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '22px', lineHeight: 1, paddingLeft: '16px' }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '22px', lineHeight: 1, paddingLeft: '16px' }}>×</button>
         </div>
         {children}
       </div>
@@ -136,11 +146,12 @@ export function Modal({ title, subtitle, children, onClose, wide, extraWide }: {
 }
 
 // ─── DETAIL ROW ───────────────────────────────────────────────────────────────
-export function DR({ label, value, copyValue }: { label: string; value: React.ReactNode; copyValue?: string }) {
+export function DR({ label, value, copyValue, darkMode }: { label: string; value: React.ReactNode; copyValue?: string; darkMode?: boolean }) {
+  const C = mkC(darkMode ?? false);
   return (
-    <div style={{ display: 'flex', gap: '16px', padding: '10px 0', borderBottom: '1px solid #f3f4f6', alignItems: 'flex-start' }}>
-      <span style={{ color: '#9ca3af', fontSize: '12px', minWidth: '160px', fontWeight: 500, paddingTop: '1px' }}>{label}</span>
-      <span style={{ color: '#1f2937', fontSize: '13px', flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+    <div style={{ display: 'flex', gap: '16px', padding: '10px 0', borderBottom: '1px solid ' + C.borderLight, alignItems: 'flex-start' }}>
+      <span style={{ color: C.textMuted, fontSize: '12px', minWidth: '160px', fontWeight: 500, paddingTop: '1px' }}>{label}</span>
+      <span style={{ color: C.text, fontSize: '13px', flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
         {value}
         {copyValue && <CopyBtn value={copyValue} size={12} />}
       </span>
@@ -204,33 +215,34 @@ export function SortBtn({ label, sortKey, current, onSort }: { label: string; so
 }
 
 // ─── NOTES PANEL ─────────────────────────────────────────────────────────────
-export function NotesPanel({ entityType, entityId, notes, onAddNote, currentUser }: { entityType: string; entityId: string; notes: any[]; onAddNote: (text: string) => void; currentUser: any }) {
+export function NotesPanel({ entityType, entityId, notes, onAddNote, currentUser, darkMode }: { entityType: string; entityId: string; notes: any[]; onAddNote: (text: string) => void; currentUser: any; darkMode?: boolean }) {
+  const C = mkC(darkMode ?? false);
   const [text, setText] = useState('');
   const relevant = notes.filter(n => n.entity_type === entityType && n.entity_id === entityId);
   return (
     <div style={{ marginTop: '24px' }}>
-      <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        📝 Internal Notes <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>— visible to console team only</span>
+      <div style={{ fontSize: '13px', fontWeight: 600, color: C.text, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        Internal Notes <span style={{ fontSize: '11px', color: C.textMuted, fontWeight: 400 }}>— visible to console team only</span>
       </div>
-      {relevant.length === 0 && <div style={{ color: '#9ca3af', fontSize: '13px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', marginBottom: '12px' }}>No notes yet.</div>}
+      {relevant.length === 0 && <div style={{ color: C.textMuted, fontSize: '13px', padding: '12px', backgroundColor: C.surfaceAlt, borderRadius: '8px', marginBottom: '12px' }}>No notes yet.</div>}
       {relevant.map(n => (
-        <div key={n.id} style={{ backgroundColor: n.pinned ? '#fffbeb' : '#f9fafb', border: `1px solid ${n.pinned ? '#fcd34d' : '#f3f4f6'}`, borderRadius: '8px', padding: '12px 14px', marginBottom: '8px' }}>
+        <div key={n.id} style={{ backgroundColor: n.pinned ? (darkMode ? '#422006' : '#fffbeb') : C.surfaceAlt, border: `1px solid ${n.pinned ? (darkMode ? '#854d0e' : '#fcd34d') : C.borderLight}`, borderRadius: '8px', padding: '12px 14px', marginBottom: '8px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: NAVY }}>{n.author}</span>
+              <span style={{ fontSize: '12px', fontWeight: 600, color: C.text }}>{n.author}</span>
               <RoleBadge role={n.author_role} />
-              {n.pinned && <span style={{ fontSize: '10px', color: '#b45309', fontWeight: 700 }}>📌 PINNED</span>}
+              {n.pinned && <span style={{ fontSize: '10px', color: '#b45309', fontWeight: 700 }}>PINNED</span>}
             </div>
-            <span style={{ fontSize: '11px', color: '#9ca3af' }}>{new Date(n.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+            <span style={{ fontSize: '11px', color: C.textMuted }}>{new Date(n.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
           </div>
-          <div style={{ fontSize: '13px', color: '#374151', lineHeight: 1.6 }}>{n.text}</div>
+          <div style={{ fontSize: '13px', color: C.text, lineHeight: 1.6 }}>{n.text}</div>
         </div>
       ))}
       <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
         <textarea value={text} onChange={e => setText(e.target.value)}
           placeholder="Add an internal note..."
-          style={{ flex: 1, padding: '10px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', resize: 'vertical', minHeight: '72px', outline: 'none', fontFamily: 'inherit' }} />
-        <Btn label="Add Note" variant="primary" onClick={() => { if (text.trim()) { onAddNote(text.trim()); setText(''); } }} />
+          style={{ flex: 1, padding: '10px 12px', border: '1px solid ' + C.inputBorder, borderRadius: '8px', fontSize: '13px', color: C.text, backgroundColor: C.inputBg, resize: 'vertical', minHeight: '72px', outline: 'none', fontFamily: 'inherit' }} />
+        <Btn label="Add Note" variant="primary" onClick={() => { if (text.trim()) { onAddNote(text.trim()); setText(''); } }} darkMode={darkMode} />
       </div>
     </div>
   );
@@ -259,7 +271,8 @@ export function highlightKeywords(text: string): React.ReactNode {
 }
 
 // ─── FILTER PANEL ─────────────────────────────────────────────────────────────
-export function FilterPanel({ filters, setFilters, tab }: { filters: any; setFilters: (f: any) => void; tab: string }) {
+export function FilterPanel({ filters, setFilters, tab, darkMode }: { filters: any; setFilters: (f: any) => void; tab: string; darkMode?: boolean }) {
+  const C = mkC(darkMode ?? false);
   const [open, setOpen] = useState(false);
   const f = filters;
   const set = (k: string, v: any) => setFilters({ ...f, [k]: v });
@@ -268,35 +281,35 @@ export function FilterPanel({ filters, setFilters, tab }: { filters: any; setFil
 
   const inp = (k: string, placeholder: string, type = 'text') => (
     <input type={type} placeholder={placeholder} value={f[k] || ''} onChange={e => set(k, e.target.value)}
-      style={{ padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: '7px', fontSize: '12px', color: '#374151', outline: 'none', width: '100%', backgroundColor: '#fff', boxSizing: 'border-box' }} />
+      style={{ padding: '7px 10px', border: '1px solid ' + C.inputBorder, borderRadius: '7px', fontSize: '12px', color: C.text, outline: 'none', width: '100%', backgroundColor: C.inputBg, boxSizing: 'border-box' }} />
   );
   const sel = (k: string, opts: [string, string][]) => (
     <select value={f[k] || ''} onChange={e => set(k, e.target.value)}
-      style={{ padding: '7px 10px', border: '1px solid #e5e7eb', borderRadius: '7px', fontSize: '12px', color: '#374151', outline: 'none', width: '100%', backgroundColor: '#fff' }}>
+      style={{ padding: '7px 10px', border: '1px solid ' + C.inputBorder, borderRadius: '7px', fontSize: '12px', color: C.text, outline: 'none', width: '100%', backgroundColor: C.inputBg }}>
       <option value=''>All</option>
       {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
     </select>
   );
-  const label = (text: string) => <div style={{ fontSize: '11px', color: '#9ca3af', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{text}</div>;
+  const label = (text: string) => <div style={{ fontSize: '11px', color: C.textMuted, marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{text}</div>;
 
   return (
     <div style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: hasActive ? NAVY : '#fff', border: `1px solid ${hasActive ? NAVY : '#e5e7eb'}`, borderRadius: '8px', fontSize: '13px', color: hasActive ? '#fff' : '#374151', cursor: 'pointer', fontWeight: 500 }}>
+      <button onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: hasActive ? (darkMode ? '#3b82f6' : NAVY) : C.surface, border: `1px solid ${hasActive ? (darkMode ? '#3b82f6' : NAVY) : C.border}`, borderRadius: '8px', fontSize: '13px', color: hasActive ? '#fff' : C.text, cursor: 'pointer', fontWeight: 500 }}>
         ⊟ Filters {hasActive && <span style={{ backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: '10px', padding: '1px 6px', fontSize: '11px', fontWeight: 700 }}>{activeCount}</span>}
       </button>
       {open && (
-        <div style={{ position: 'absolute', top: '44px', left: 0, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', padding: '20px', zIndex: 50, minWidth: '340px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+        <div style={{ position: 'absolute', top: '44px', left: 0, backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', boxShadow: darkMode ? '0 8px 32px rgba(0,0,0,0.4)' : '0 8px 32px rgba(0,0,0,0.12)', padding: '20px', zIndex: 50, minWidth: '340px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
           <div style={{ gridColumn: '1/-1', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Filters</span>
-            <button onClick={() => { setFilters({ sort: f.sort }); setOpen(false); }} style={{ fontSize: '12px', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: C.text, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Filters</span>
+            <button onClick={() => { setFilters({ sort: f.sort }); setOpen(false); }} style={{ fontSize: '12px', color: C.textMuted, background: 'none', border: 'none', cursor: 'pointer' }}>Clear all</button>
           </div>
           {tab === 'users' && <><div>{label('Role')}{sel('role', [['vendor','Vendor'],['couple','Couple']])}</div><div>{label('Status')}{sel('status', [['active','Active'],['suspended','Suspended'],['pending','Pending'],['probation','Probation']])}</div><div>{label('Tier')}{sel('tier', [['verified','Verified'],['featured','Featured'],['new','New'],['probation','Probation'],['standard','Standard']])}</div><div>{label('Min Transactions')}{inp('min_txns','0','number')}</div><div>{label('Joined After')}{inp('joined_after','YYYY-MM-DD','date')}</div><div>{label('Joined Before')}{inp('joined_before','YYYY-MM-DD','date')}</div><div style={{gridColumn:'1/-1'}}>{label('Repeat Flags ≥')}{inp('min_flags','0','number')}</div></>}
           {tab === 'listings' && <><div>{label('Status')}{sel('status', [['active','Active'],['suspended','Suspended'],['pending_review','Pending Review']])}</div><div>{label('Category')}{sel('category', [['Photography','Photography'],['Florals','Florals'],['Entertainment','Entertainment']])}</div><div>{label('Min Price ($)')}{inp('min_price','0','number')}</div><div>{label('Max Price ($)')}{inp('max_price','99999','number')}</div></>}
           {tab === 'transactions' && <><div>{label('Status')}{sel('status', [['completed','Completed'],['disputed','Disputed'],['refunded','Refunded'],['pending','Pending']])}</div><div>{label('Disputed')}{sel('disputed', [['yes','Disputed only'],['no','Non-disputed']])}</div><div>{label('Date After')}{inp('date_after','YYYY-MM-DD','date')}</div><div>{label('Date Before')}{inp('date_before','YYYY-MM-DD','date')}</div><div>{label('Min Amount ($)')}{inp('min_amount','0','number')}</div><div>{label('Max Amount ($)')}{inp('max_amount','99999','number')}</div><div style={{gridColumn:'1/-1'}}>{label('Seller')}{inp('seller','Filter by seller name')}</div><div style={{gridColumn:'1/-1'}}>{label('Buyer')}{inp('buyer','Filter by buyer name')}</div></>}
           {tab === 'reviews' && <><div>{label('Flagged')}{sel('flagged', [['yes','Flagged only'],['no','Not flagged']])}</div><div>{label('Min Rating')}{sel('min_rating', [['1','1+'],['2','2+'],['3','3+'],['4','4+'],['5','5 only']])}</div><div>{label('Max Rating')}{sel('max_rating', [['1','1 only'],['2','2 or less'],['3','3 or less'],['4','4 or less']])}</div><div>{label('Date After')}{inp('date_after','YYYY-MM-DD','date')}</div></>}
           {tab === 'conversations' && <><div>{label('Status')}{sel('status', [['flagged','Flagged'],['clean','Clean']])}</div><div>{label('Reviewed')}{sel('reviewed', [['yes','Reviewed'],['no','Unreviewed']])}</div><div>{label('Keyword Type')}{sel('kw_category', [['payment','Payment'],['contact','Contact'],['offplatform','Off-Platform']])}</div></>}
-          <div style={{ gridColumn: '1/-1', paddingTop: '8px', borderTop: '1px solid #f3f4f6', display: 'flex', justifyContent: 'flex-end' }}>
-            <Btn label="Apply" variant="primary" onClick={() => setOpen(false)} small />
+          <div style={{ gridColumn: '1/-1', paddingTop: '8px', borderTop: '1px solid ' + C.borderLight, display: 'flex', justifyContent: 'flex-end' }}>
+            <Btn label="Apply" variant="primary" onClick={() => setOpen(false)} small darkMode={darkMode} />
           </div>
         </div>
       )}

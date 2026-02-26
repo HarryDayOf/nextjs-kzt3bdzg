@@ -57,11 +57,26 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             ))}
           </div>
         ) : (
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: C.textMuted, fontSize: '14px' }}>⌕</span>
-            <input style={{ paddingLeft: '30px', paddingRight: tabSearch ? '28px' : '12px', paddingTop: '8px', paddingBottom: '8px', width: '240px', backgroundColor: C.inputBg, border: '1px solid ' + C.inputBorder, borderRadius: '8px', fontSize: '13px', color: C.text, outline: 'none' }} placeholder={`Search ${tab}...`} value={tabSearch} onChange={e => setTabSearch(e.target.value)} />
-            {tabSearch && <button onClick={() => setTabSearch('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '14px' }}>×</button>}
-          </div>
+          <>
+            <div style={{ position: 'relative' }}>
+              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: C.textMuted, fontSize: '14px' }}>⌕</span>
+              <input style={{ paddingLeft: '30px', paddingRight: tabSearch ? '28px' : '12px', paddingTop: '8px', paddingBottom: '8px', width: '240px', backgroundColor: C.inputBg, border: '1px solid ' + C.inputBorder, borderRadius: '8px', fontSize: '13px', color: C.text, outline: 'none' }} placeholder={`Search ${tab}...`} value={tabSearch} onChange={e => setTabSearch(e.target.value)} />
+              {tabSearch && <button onClick={() => setTabSearch('')} style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: C.textMuted, cursor: 'pointer', fontSize: '14px' }}>×</button>}
+            </div>
+            {tab === 'users' && (
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {([['', 'All'], ['vendor', 'Vendors'], ['couple', 'Couples']] as [string, string][]).map(([val, lbl]) => {
+                  const active = (filters.role || '') === val;
+                  return (
+                    <button key={val} onClick={() => setFilters({ ...filters, role: val || undefined })}
+                      style={{ padding: '6px 12px', backgroundColor: active ? (darkMode ? '#3b82f6' : NAVY) : C.surface, border: '1px solid ' + (active ? (darkMode ? '#3b82f6' : NAVY) : C.border), borderRadius: '8px', fontSize: '12px', color: active ? '#fff' : C.textMuted, cursor: 'pointer', fontWeight: 500 }}>
+                      {lbl}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
         {tab === 'conversations' && (
           <div style={{ position: 'relative' }}>
@@ -69,7 +84,7 @@ export function TableTab({ tab, items, totalCount, page, pageSize, onPageChange,
             <input style={{ paddingLeft: '30px', paddingTop: '8px', paddingBottom: '8px', width: '200px', backgroundColor: C.inputBg, border: '1px solid ' + C.inputBorder, borderRadius: '8px', fontSize: '12px', color: C.text, outline: 'none' }} placeholder="Search..." value={tabSearch} onChange={e => setTabSearch(e.target.value)} />
           </div>
         )}
-        <FilterPanel filters={filters} setFilters={setFilters} tab={tab} />
+        <FilterPanel filters={filters} setFilters={setFilters} tab={tab} darkMode={darkMode} />
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
           <span style={{ fontSize: '12px', color: C.textMuted }}>{totalCount.toLocaleString()} {totalCount === 1 ? 'result' : 'results'}</span>
           <Btn small label="⬇ CSV" onClick={onExportCSV} />
