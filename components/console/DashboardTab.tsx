@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { StatCard, MiniBarChart, StackedBarChart, NAVY } from './ui';
-import { riskScore, riskColor } from '../../lib/types';
+import { riskScore, riskColor, mkC } from '../../lib/types';
 import { MOCK_GMV_WEEKLY, MOCK_SIGNUPS_WEEKLY } from '../../lib/mockData';
 
-export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate: (tab: string, filter?: string) => void; role?: string }) {
+export function DashboardTab({ data, onNavigate, role, darkMode }: { data: any; onNavigate: (tab: string, filter?: string) => void; role?: string; darkMode?: boolean }) {
+  const C = mkC(darkMode ?? false);
+  const linkColor = darkMode ? '#60a5fa' : NAVY;
   const isLeadership = role === 'admin' || role === 'leadership';
   const { users, listings, transactions, reviews, conversations, alerts } = data;
 
@@ -31,9 +33,9 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
   ].filter(Boolean) as { level: string; msg: string; tab: string }[];
 
   const alertColors: Record<string, { bg: string; border: string; color: string; icon: string }> = {
-    critical: { bg: '#fdecea', border: '#fca5a5', color: '#c62828', icon: '🔴' },
-    warning:  { bg: '#fff8e1', border: '#fcd34d', color: '#b45309', icon: '🟡' },
-    info:     { bg: '#e0f2fe', border: '#7dd3fc', color: '#0369a1', icon: '🔵' },
+    critical: { bg: darkMode ? '#2a1215' : '#fdecea', border: darkMode ? '#7f1d1d' : '#fca5a5', color: darkMode ? '#fca5a5' : '#c62828', icon: '🔴' },
+    warning:  { bg: darkMode ? '#1e1a0f' : '#fff8e1', border: darkMode ? '#854d0e' : '#fcd34d', color: darkMode ? '#fcd34d' : '#b45309', icon: '🟡' },
+    info:     { bg: darkMode ? '#0c1929' : '#e0f2fe', border: darkMode ? '#0369a1' : '#7dd3fc', color: darkMode ? '#7dd3fc' : '#0369a1', icon: '🔵' },
   };
 
   const highRiskConvs = conversations.filter((c: any) => riskScore(c) >= 60);
@@ -47,9 +49,9 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
   ];
 
   const queueColors: Record<string, { dot: string; label: string; bg: string }> = {
-    critical: { dot: '#c62828', label: '#c62828', bg: '#fdecea' },
-    warning:  { dot: '#b45309', label: '#b45309', bg: '#fff8e1' },
-    info:     { dot: '#0369a1', label: '#0369a1', bg: '#e0f2fe' },
+    critical: { dot: '#c62828', label: darkMode ? '#fca5a5' : '#c62828', bg: darkMode ? '#2a1215' : '#fdecea' },
+    warning:  { dot: '#b45309', label: darkMode ? '#fcd34d' : '#b45309', bg: darkMode ? '#1e1a0f' : '#fff8e1' },
+    info:     { dot: '#0369a1', label: darkMode ? '#7dd3fc' : '#0369a1', bg: darkMode ? '#0c1929' : '#e0f2fe' },
   };
 
   if (!isLeadership) {
@@ -66,24 +68,24 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
 
         {/* NEEDS ATTENTION QUEUE */}
         <div className="panel-grid-21">
-          <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: linkColor, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Needs Attention
-              <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>{queue.length} item{queue.length !== 1 ? 's' : ''}</span>
+              <span style={{ fontSize: '11px', color: C.textMuted, fontWeight: 400 }}>{queue.length} item{queue.length !== 1 ? 's' : ''}</span>
             </div>
             {queue.length === 0
-              ? <div style={{ color: '#9ca3af', fontSize: '13px', padding: '12px 0' }}>All clear — nothing needs attention.</div>
+              ? <div style={{ color: C.textMuted, fontSize: '13px', padding: '12px 0' }}>All clear — nothing needs attention.</div>
               : queue.map((item, i) => {
                   const c = queueColors[item.level];
                   return (
-                    <div key={i} onClick={() => onNavigate(item.tab)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: i < queue.length - 1 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}
-                      onMouseOver={e => (e.currentTarget.style.backgroundColor = '#fafafa')} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                    <div key={i} onClick={() => onNavigate(item.tab)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: i < queue.length - 1 ? '1px solid ' + C.borderLight : 'none', cursor: 'pointer' }}
+                      onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
                       <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: c.dot, flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: '13px', fontWeight: 600, color: c.label }}>{item.label}</div>
-                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.detail}</div>
+                        <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.detail}</div>
                       </div>
-                      <span style={{ fontSize: '11px', color: '#d1d5db', flexShrink: 0 }}>View →</span>
+                      <span style={{ fontSize: '11px', color: C.textFaint, flexShrink: 0 }}>View →</span>
                     </div>
                   );
                 })
@@ -91,18 +93,18 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
           </div>
 
           {/* SUSPENDED USERS */}
-          <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: linkColor, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               Suspended Users
-              <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>{suspendedUsers} total</span>
+              <span style={{ fontSize: '11px', color: C.textMuted, fontWeight: 400 }}>{suspendedUsers} total</span>
             </div>
             {users.filter((u: any) => u.status === 'suspended').length === 0
-              ? <div style={{ color: '#9ca3af', fontSize: '13px' }}>None currently suspended.</div>
+              ? <div style={{ color: C.textMuted, fontSize: '13px' }}>None currently suspended.</div>
               : users.filter((u: any) => u.status === 'suspended').map((u: any) => (
-                <div key={u.id} onClick={() => onNavigate('users')} style={{ padding: '9px 0', borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
-                  onMouseOver={e => (e.currentTarget.style.backgroundColor = '#fafafa')} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
-                  <div style={{ fontSize: '13px', fontWeight: 500, color: NAVY }}>{u.name}</div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>{u.role} · {u.email}</div>
+                <div key={u.id} onClick={() => onNavigate('users')} style={{ padding: '9px 0', borderBottom: '1px solid ' + C.borderLight, cursor: 'pointer' }}
+                  onMouseOver={e => (e.currentTarget.style.backgroundColor = C.surfaceAlt)} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: linkColor }}>{u.name}</div>
+                  <div style={{ fontSize: '11px', color: C.textMuted }}>{u.role} · {u.email}</div>
                 </div>
               ))
             }
@@ -118,7 +120,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
       {/* ACTIVE ALERTS */}
       {activeAlerts.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: '2px' }}>Alerts</span>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: '2px' }}>Alerts</span>
           {activeAlerts.map((a, i) => {
             const s = alertColors[a.level];
             return (
@@ -149,13 +151,13 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
 
       {/* CHARTS */}
       <div className="stat-grid-3">
-        <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
+        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="gmv" label="Weekly GMV ($)" color={NAVY} />
         </div>
-        <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
+        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
           <StackedBarChart data={MOCK_SIGNUPS_WEEKLY} keys={['vendors', 'couples']} colors={[NAVY, '#60a5fa']} label="Weekly Signups" />
         </div>
-        <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
+        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="disputes" label="Disputes per Week" color="#c62828" />
         </div>
       </div>
@@ -164,42 +166,42 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
       <div className="panel-grid-2">
 
         {/* REPEAT OFFENDERS */}
-        <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: linkColor, marginBottom: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             Repeat Offenders
-            <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>≥2 policy flags</span>
+            <span style={{ fontSize: '11px', color: C.textMuted, fontWeight: 400 }}>≥2 policy flags</span>
           </div>
           {repeatOffenders.length === 0
-            ? <div style={{ color: '#9ca3af', fontSize: '13px' }}>No repeat offenders.</div>
+            ? <div style={{ color: C.textMuted, fontSize: '13px' }}>No repeat offenders.</div>
             : repeatOffenders.map((u: any) => (
-              <div key={u.id} onClick={() => onNavigate('users')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}>
+              <div key={u.id} onClick={() => onNavigate('users')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid ' + C.borderLight, cursor: 'pointer' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: 500, color: NAVY }}>{u.name}</div>
-                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>{u.email}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: linkColor }}>{u.name}</div>
+                  <div style={{ fontSize: '11px', color: C.textMuted }}>{u.email}</div>
                 </div>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#c62828', backgroundColor: '#fdecea', padding: '2px 8px', borderRadius: '20px' }}>{u.repeatFlags} flags</span>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: darkMode ? '#fca5a5' : '#c62828', backgroundColor: darkMode ? '#2a1215' : '#fdecea', padding: '2px 8px', borderRadius: '20px' }}>{u.repeatFlags} flags</span>
               </div>
             ))
           }
         </div>
 
         {/* VENDOR PERFORMANCE SNAPSHOT */}
-        <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '14px' }}>Vendor Performance Snapshot</div>
+        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, color: linkColor, marginBottom: '14px' }}>Vendor Performance Snapshot</div>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
             <thead>
               <tr>{['Vendor', 'Response', 'Booking', 'Cancel', 'Rating'].map(h => (
-                <th key={h} style={{ textAlign: 'left', fontSize: '10px', color: '#9ca3af', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', paddingBottom: '8px' }}>{h}</th>
+                <th key={h} style={{ textAlign: 'left', fontSize: '10px', color: C.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', paddingBottom: '8px' }}>{h}</th>
               ))}</tr>
             </thead>
             <tbody>
               {users.filter((u: any) => u.role === 'vendor').map((u: any) => (
-                <tr key={u.id} onClick={() => onNavigate('users')} style={{ cursor: 'pointer', borderTop: '1px solid #f9fafb' }}>
-                  <td style={{ padding: '8px 0', fontWeight: 500, color: NAVY }}>{u.name.length > 16 ? u.name.slice(0, 16) + '...' : u.name}</td>
+                <tr key={u.id} onClick={() => onNavigate('users')} style={{ cursor: 'pointer', borderTop: '1px solid ' + C.borderLight }}>
+                  <td style={{ padding: '8px 0', fontWeight: 500, color: linkColor }}>{u.name.length > 16 ? u.name.slice(0, 16) + '...' : u.name}</td>
                   <td style={{ padding: '8px 0', color: (u.responseRate ?? 0) < 70 ? '#c62828' : '#2e7d32' }}>{u.responseRate ?? 0}%</td>
-                  <td style={{ padding: '8px 0', color: '#374151' }}>{u.bookingRate ?? 0}%</td>
-                  <td style={{ padding: '8px 0', color: (u.cancellationRate ?? 0) > 10 ? '#c62828' : '#374151' }}>{u.cancellationRate ?? 0}%</td>
-                  <td style={{ padding: '8px 0', color: (u.avgRating ?? 0) < 3 ? '#c62828' : '#374151' }}>{u.avgRating ? u.avgRating.toFixed(1) + ' ★' : '—'}</td>
+                  <td style={{ padding: '8px 0', color: C.text }}>{u.bookingRate ?? 0}%</td>
+                  <td style={{ padding: '8px 0', color: (u.cancellationRate ?? 0) > 10 ? '#c62828' : C.text }}>{u.cancellationRate ?? 0}%</td>
+                  <td style={{ padding: '8px 0', color: (u.avgRating ?? 0) < 3 ? '#c62828' : C.text }}>{u.avgRating ? u.avgRating.toFixed(1) + ' ★' : '—'}</td>
                 </tr>
               ))}
             </tbody>

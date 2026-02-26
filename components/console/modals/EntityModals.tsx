@@ -7,14 +7,6 @@ import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, type KWHit
 // ─── USER MODAL ───────────────────────────────────────────────────────────────
 export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUser }: any) {
   const [tab, setTab] = useState<'info' | 'history' | 'notes'>('info');
-  const tierColors: Record<string, { bg: string; color: string }> = {
-    verified: { bg: '#e0f2fe', color: '#0369a1' },
-    featured: { bg: '#fdf4ff', color: '#7e22ce' },
-    new:      { bg: '#f0fdf4', color: '#15803d' },
-    probation:{ bg: '#fff3e0', color: '#e65100' },
-    standard: { bg: '#f3f4f6', color: '#6b7280' },
-  };
-  const tc = tierColors[user.tier ?? 'standard'];
 
   return (
     <Modal title={user.name} subtitle={user.id} onClose={onClose} wide>
@@ -30,7 +22,6 @@ export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUs
       {tab === 'info' && <>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <Badge status={user.status} />
-          {user.tier && <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 600, backgroundColor: tc.bg, color: tc.color }}>{user.tier}</span>}
           {(user.repeatFlags ?? 0) >= 2 && <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, backgroundColor: '#fdecea', color: '#c62828' }}>⚠ {user.repeatFlags} policy flags</span>}
         </div>
         <DR label="User ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#6b7280' }}>{user.id}</span>} />
@@ -47,20 +38,6 @@ export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUs
           <DR label="Avg Rating" value={user.avgRating ? `${user.avgRating.toFixed(1)} ★` : '—'} />
         </>}
 
-        {/* VENDOR TIER CONTROL */}
-        {user.role === 'vendor' && (
-          <div style={{ marginTop: '16px', padding: '14px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #f3f4f6' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Vendor Tier</div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {(['verified', 'featured', 'standard', 'probation'] as const).map(tier => (
-                <button key={tier} onClick={() => onAction('setTier', { id: user.id, tier })}
-                  style={{ padding: '5px 12px', borderRadius: '20px', border: `1px solid ${user.tier === tier ? '#0369a1' : '#e5e7eb'}`, backgroundColor: user.tier === tier ? '#e0f2fe' : '#fff', color: user.tier === tier ? '#0369a1' : '#6b7280', fontSize: '12px', cursor: 'pointer', fontWeight: user.tier === tier ? 600 : 400, textTransform: 'capitalize' }}>
-                  {tier}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
           <Btn variant="primary" label="Edit Profile" onClick={() => onAction('edit', user)} />
@@ -90,14 +67,16 @@ export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUs
 
 // ─── LISTING MODAL ────────────────────────────────────────────────────────────
 export function ListingModal({ listing, notes, onClose, onAction, onAddNote, currentUser }: any) {
-  const [tab, setTab] = useState<'info' | 'notes'>('info');
+  const [tab, setTab] = useState<'info' | 'documents' | 'notes'>('info');
   const ctr = listing.inquiries > 0 ? ((listing.bookings / listing.inquiries) * 100).toFixed(0) : '0';
+  const pendingDocs = (listing.documents ?? []).filter((d: any) => d.status === 'pending').length;
   return (
-    <Modal title={listing.title} subtitle={listing.id} onClose={onClose}>
+    <Modal title={listing.title} subtitle={listing.id} onClose={onClose} wide>
       <div style={{ display: 'flex', gap: '0', marginBottom: '20px', borderBottom: '1px solid #f3f4f6' }}>
-        {(['info', 'notes'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', background: 'none', border: 'none', borderBottom: tab === t ? `2px solid ${NAVY}` : '2px solid transparent', fontSize: '13px', color: tab === t ? NAVY : '#9ca3af', cursor: 'pointer', fontWeight: tab === t ? 600 : 400, textTransform: 'capitalize', marginBottom: '-1px' }}>
-            {t === 'notes' ? `Notes (${notes.filter((n: any) => n.entity_id === listing.id).length})` : t}
+        {(['info', 'documents', 'notes'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', background: 'none', border: 'none', borderBottom: tab === t ? `2px solid ${NAVY}` : '2px solid transparent', fontSize: '13px', color: tab === t ? NAVY : '#9ca3af', cursor: 'pointer', fontWeight: tab === t ? 600 : 400, textTransform: 'capitalize', marginBottom: '-1px', position: 'relative' }}>
+            {t === 'notes' ? `Notes (${notes.filter((n: any) => n.entity_id === listing.id).length})` : t === 'documents' ? 'Documents' : t}
+            {t === 'documents' && pendingDocs > 0 && <span style={{ position: 'absolute', top: '2px', right: '2px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#c62828', color: '#fff', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pendingDocs}</span>}
           </button>
         ))}
       </div>
@@ -119,6 +98,65 @@ export function ListingModal({ listing, notes, onClose, onAction, onAddNote, cur
           <Btn label="Suppress from Search" onClick={() => onAction('suppress', listing)} />
         </div>
       </>}
+      {tab === 'documents' && (
+        <div>
+          {(!listing.documents || listing.documents.length === 0) ? (
+            <div style={{ color: '#9ca3af', fontSize: '13px', textAlign: 'center', padding: '32px 0' }}>
+              No documents have been submitted for this listing.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {listing.documents.map((doc: any) => (
+                <div key={doc.id} style={{ border: '1px solid #e5e7eb', borderRadius: '10px', overflow: 'hidden' }}>
+                  {/* Doc Header */}
+                  <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#fafafa', borderBottom: '1px solid #f3f4f6' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '20px' }}>{doc.type === 'dba_filing' ? '📋' : doc.type === 'business_license' ? '📄' : '🛡️'}</span>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY }}>{doc.label}</div>
+                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '1px' }}>
+                          Submitted {new Date(doc.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {doc.reviewedBy && <> · Reviewed by {doc.reviewedBy}</>}
+                        </div>
+                      </div>
+                    </div>
+                    <Badge status={doc.status} />
+                  </div>
+
+                  {/* Inline Preview */}
+                  <div style={{ height: '350px', backgroundColor: '#f9fafb', position: 'relative' }}>
+                    <iframe
+                      src={doc.url}
+                      style={{ width: '100%', height: '100%', border: 'none' }}
+                      title={`Preview: ${doc.label}`}
+                    />
+                    <div style={{ position: 'absolute', bottom: '8px', right: '8px' }}>
+                      <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '5px 10px', backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '6px', fontSize: '11px', color: NAVY, fontWeight: 500, textDecoration: 'none', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                        Open in new tab ↗
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Approve / Reject actions for pending docs */}
+                  {doc.status === 'pending' && (
+                    <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '8px', borderTop: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
+                      <Btn variant="success" label="✓ Approve Document" onClick={() => onAction('approveDoc', { listingId: listing.id, docId: doc.id, title: listing.title, docLabel: doc.label })} />
+                      <Btn variant="danger" label="✗ Reject Document" onClick={() => onAction('rejectDoc', { listingId: listing.id, docId: doc.id, title: listing.title, docLabel: doc.label })} />
+                      <span style={{ marginLeft: 'auto', fontSize: '11px', color: '#9ca3af' }}>Review required before listing goes live</span>
+                    </div>
+                  )}
+                  {doc.status !== 'pending' && doc.reviewedAt && (
+                    <div style={{ padding: '10px 16px', fontSize: '11px', color: doc.status === 'approved' ? '#2e7d32' : '#c62828', borderTop: '1px solid #f3f4f6', backgroundColor: '#fafafa' }}>
+                      {doc.status === 'approved' ? '✓ Approved' : '✗ Rejected'} on {new Date(doc.reviewedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} by {doc.reviewedBy}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       {tab === 'notes' && <NotesPanel entityType="listing" entityId={listing.id} notes={notes} onAddNote={(text) => onAction('addNote', { entityType: 'listing', entityId: listing.id, text })} currentUser={currentUser} />}
     </Modal>
   );

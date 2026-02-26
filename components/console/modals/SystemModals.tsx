@@ -108,7 +108,7 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>User Report</div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.users.map((u: any) => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Tier: u.tier, Joined: u.joined, Transactions: u.transactions })), 'dayof-users.csv')} />
+                  <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.users.map((u: any) => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Joined: u.joined, Transactions: u.transactions })), 'dayof-users.csv')} />
                   <Btn small label="🖨 Print" onClick={() => printTable('User Report', data.users, [{ key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'role', label: 'Role' }, { key: 'status', label: 'Status' }, { key: 'joined', label: 'Joined' }])} />
                 </div>
               </div>
@@ -118,7 +118,7 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
                 <StatCard label="Couples" value={data.users.filter((u: any) => u.role === 'couple').length} />
                 <StatCard label="Suspended" value={suspended.length} color={suspended.length > 0 ? '#c62828' : undefined} />
               </div>
-              <ReportTable rows={data.users} columns={[{ key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'role', label: 'Role' }, { key: 'status', label: 'Status', render: (v: string) => <Badge status={v} /> }, { key: 'tier', label: 'Tier', render: (v: string) => v ? <Badge status={v} /> : null }, { key: 'joined', label: 'Joined' }, { key: 'transactions', label: 'Txns' }]} />
+              <ReportTable rows={data.users} columns={[{ key: 'name', label: 'Name' }, { key: 'email', label: 'Email' }, { key: 'role', label: 'Role' }, { key: 'status', label: 'Status', render: (v: string) => <Badge status={v} /> }, { key: 'joined', label: 'Joined' }, { key: 'transactions', label: 'Txns' }]} />
             </div>
           )}
 
@@ -126,12 +126,11 @@ export function ReportsModal({ data, onClose }: { data: any; onClose: () => void
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ fontSize: '15px', fontWeight: 600, color: NAVY }}>Vendor Performance</div>
-                <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.users.filter((u: any) => u.role === 'vendor').map((u: any) => ({ Name: u.name, Status: u.status, Tier: u.tier, 'Response Rate': u.responseRate + '%', 'Booking Rate': u.bookingRate + '%', 'Cancellation Rate': u.cancellationRate + '%', 'Avg Rating': u.avgRating, 'Repeat Flags': u.repeatFlags, Revenue: '$' + u.revenue })), 'dayof-vendor-performance.csv')} />
+                <Btn small label="⬇ CSV" onClick={() => downloadCSV(data.users.filter((u: any) => u.role === 'vendor').map((u: any) => ({ Name: u.name, Status: u.status, 'Response Rate': u.responseRate + '%', 'Booking Rate': u.bookingRate + '%', 'Cancellation Rate': u.cancellationRate + '%', 'Avg Rating': u.avgRating, 'Repeat Flags': u.repeatFlags, Revenue: '$' + u.revenue })), 'dayof-vendor-performance.csv')} />
               </div>
               <ReportTable rows={data.users.filter((u: any) => u.role === 'vendor')} columns={[
                 { key: 'name', label: 'Vendor' },
                 { key: 'status', label: 'Status', render: (v: string) => <Badge status={v} /> },
-                { key: 'tier', label: 'Tier', render: (v: string) => v ? <Badge status={v} /> : null },
                 { key: 'responseRate', label: 'Response', render: (v: number) => <span style={{ color: v < 70 ? '#c62828' : '#2e7d32', fontWeight: 600 }}>{v}%</span> },
                 { key: 'bookingRate', label: 'Booking', render: (v: number) => `${v}%` },
                 { key: 'cancellationRate', label: 'Cancel', render: (v: number) => <span style={{ color: v > 10 ? '#c62828' : '#374151', fontWeight: v > 10 ? 600 : 400 }}>{v}%</span> },

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Logo, Btn, GlobalSearchResults, TabIcon, NAVY } from './ui';
 import { DashboardTab } from './DashboardTab';
 import { TableTab } from './TableTab';
@@ -10,7 +10,7 @@ import {
   MOCK_USERS, MOCK_LISTINGS, MOCK_TRANSACTIONS, MOCK_REVIEWS,
   MOCK_CONVERSATIONS, MOCK_NOTES, MOCK_AUDIT, MOCK_ALERT_CONFIGS, MOCK_CONSOLE_USERS,
 } from '../../lib/mockData';
-import { downloadCSV, printTable, type Role, type Note, type AuditEntry, type KWCategory } from '../../lib/types';
+import { downloadCSV, printTable, mkC, type Role, type Note, type AuditEntry, type KWCategory } from '../../lib/types';
 
 // ─── FILTER + SORT ENGINE ─────────────────────────────────────────────────────
 function applyFiltersAndSort(items: any[], search: string, fields: string[], filters: any, sort: string): any[] {
@@ -18,7 +18,6 @@ function applyFiltersAndSort(items: any[], search: string, fields: string[], fil
   const f = filters;
   if (f.role) out = out.filter(i => i.role === f.role);
   if (f.status) out = out.filter(i => i.status === f.status);
-  if (f.tier) out = out.filter(i => i.tier === f.tier);
   if (f.joined_after) out = out.filter(i => i.joined >= f.joined_after);
   if (f.joined_before) out = out.filter(i => i.joined <= f.joined_before);
   if (f.min_txns) out = out.filter(i => i.transactions >= Number(f.min_txns));
@@ -59,6 +58,9 @@ function applyFiltersAndSort(items: any[], search: string, fields: string[], fil
   return out;
 }
 
+// ─── PAGINATION CONSTANT ──────────────────────────────────────────────────────
+const PAGE_SIZE = 50;
+
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function SupportConsole({ user }: { user: any }) {
   // — auth
@@ -70,6 +72,21 @@ export default function SupportConsole({ user }: { user: any }) {
   const [filters, setFilters] = useState<any>({});
   const [sort, setSort] = useState('');
   const [convFilter, setConvFilter] = useState('all');
+
+  // — pagination
+  const [page, setPage] = useState(1);
+
+  // — debounced search (fires 300 ms after user stops typing)
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedSearch(tabSearch); setPage(1); }, 300);
+    return () => clearTimeout(t);
+  }, [tabSearch]);
+
+  // — dark mode (persisted in localStorage for overnight CS agents)
+  const [darkMode, setDarkMode] = useState(() => typeof window !== 'undefined' && localStorage.getItem('dayof-dark') === '1');
+  useEffect(() => { localStorage.setItem('dayof-dark', darkMode ? '1' : '0'); }, [darkMode]);
+  const C = mkC(darkMode);
 
   // — global search
   const [globalSearch, setGlobalSearch] = useState('');
@@ -119,33 +136,44 @@ export default function SupportConsole({ user }: { user: any }) {
     toast('Note saved.');
   };
 
-  // — navigation helper
-  const changeTab = (t: string, search?: string) => { setTab(t); setTabSearch(search ?? ''); setFilters({}); setSort(''); setConvFilter('all'); };
-  const handleSort = (k: string) => setSort(k);
+  // — navigation helper (resets pagination on every tab/filter change)
+  const changeTab = (t: string, search?: string) => { setTab(t); setTabSearch(search ?? ''); setFilters({}); setSort(''); setConvFilter('all'); setPage(1); };
+  const handleSort = (k: string) => { setSort(k); setPage(1); };
 
   // ─── FILTERED DATA ──────────────────────────────────────────────────────────
-  const filteredUsers = useMemo(() => applyFiltersAndSort(users, tabSearch, ['name', 'email', 'id'], filters, sort), [users, tabSearch, filters, sort]);
-  const filteredListings = useMemo(() => applyFiltersAndSort(listings, tabSearch, ['title', 'vendor', 'id'], filters, sort), [listings, tabSearch, filters, sort]);
-  const filteredTransactions = useMemo(() => applyFiltersAndSort(transactions, tabSearch, ['buyer', 'seller', 'id', 'stripe_id'], filters, sort), [transactions, tabSearch, filters, sort]);
-  const filteredReviews = useMemo(() => applyFiltersAndSort(reviews, tabSearch, ['author', 'target', 'content', 'id'], filters, sort), [reviews, tabSearch, filters, sort]);
+  // All filtering uses debouncedSearch so the engine isn't hammered on every keystroke
+  const filteredUsers = useMemo(() => applyFiltersAndSort(users, debouncedSearch, ['name', 'email', 'id'], filters, sort), [users, debouncedSearch, filters, sort]);
+  const filteredListings = useMemo(() => applyFiltersAndSort(listings, debouncedSearch, ['title', 'vendor', 'id'], filters, sort), [listings, debouncedSearch, filters, sort]);
+  const filteredTransactions = useMemo(() => applyFiltersAndSort(transactions, debouncedSearch, ['buyer', 'seller', 'id', 'stripe_id'], filters, sort), [transactions, debouncedSearch, filters, sort]);
+  const filteredReviews = useMemo(() => applyFiltersAndSort(reviews, debouncedSearch, ['author', 'target', 'content', 'id'], filters, sort), [reviews, debouncedSearch, filters, sort]);
   const filteredConvs = useMemo(() => {
     let base = convs;
     if (convFilter === 'flagged') base = base.filter(c => c.status === 'flagged');
     else if (convFilter === 'clean') base = base.filter(c => c.status === 'clean');
     else if (convFilter === 'unreviewed') base = base.filter(c => c.status === 'flagged' && !c.reviewed);
-    return applyFiltersAndSort(base, tabSearch, ['id'], filters, sort);
-  }, [convs, convFilter, tabSearch, filters, sort]);
+    return applyFiltersAndSort(base, debouncedSearch, ['id'], filters, sort);
+  }, [convs, convFilter, debouncedSearch, filters, sort]);
 
   const unrev = convs.filter(c => c.status === 'flagged' && !c.reviewed).length;
   const activeData = { users, listings, transactions, reviews, conversations: convs, alerts: alertConfigs };
 
   // ─── CURRENT TABLE ITEMS ────────────────────────────────────────────────────
+  // Full filtered + sorted arrays (needed for CSV/print and total count)
   const currentItems: Record<string, any[]> = { users: filteredUsers, listings: filteredListings, transactions: filteredTransactions, reviews: filteredReviews, conversations: filteredConvs };
+
+  // ─── PAGINATED SLICE ─────────────────────────────────────────────────────────
+  // Only the current page of rows is rendered — keeps DOM lean at 100k+ records
+  const pagedItems = useMemo(() => {
+    const all = currentItems[tab] ?? [];
+    const start = (page - 1) * PAGE_SIZE;
+    return all.slice(start, start + PAGE_SIZE);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, filteredUsers, filteredListings, filteredTransactions, filteredReviews, filteredConvs, page]);
 
   // ─── CSV / PRINT ────────────────────────────────────────────────────────────
   const doExportCSV = () => {
     const maps: Record<string, () => any[]> = {
-      users: () => filteredUsers.map(u => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Tier: u.tier, Joined: u.joined, Transactions: u.transactions, RepeatFlags: u.repeatFlags })),
+      users: () => filteredUsers.map(u => ({ ID: u.id, Name: u.name, Email: u.email, Role: u.role, Status: u.status, Joined: u.joined, Transactions: u.transactions, RepeatFlags: u.repeatFlags })),
       listings: () => filteredListings.map(l => ({ ID: l.id, Title: l.title, Vendor: l.vendor, Category: l.category, Price: l.price, Status: l.status, Views: l.views, Bookings: l.bookings })),
       transactions: () => filteredTransactions.map(t => ({ ID: t.id, StripeID: t.stripe_id, Buyer: t.buyer, Seller: t.seller, Amount: t.amount, Status: t.status, Date: t.date, Disputed: t.disputed ? 'Yes' : 'No' })),
       reviews: () => filteredReviews.map(r => ({ ID: r.id, Author: r.author, Target: r.target, Rating: r.rating, Content: r.content, Date: r.date, Flagged: r.flagged ? 'Yes' : 'No' })),
@@ -173,15 +201,10 @@ export default function SupportConsole({ user }: { user: any }) {
       addAudit(newStatus === 'suspended' ? 'Suspended user' : 'Unsuspended user', 'user', payload.id, payload.name, `Status: ${payload.status} → ${newStatus}`);
       toast(`User ${newStatus}.`);
     } else if (action === 'probation') {
-      setUsers(us => us.map(u => u.id === payload.id ? { ...u, status: 'probation', tier: 'probation' } : u));
-      if (selU?.id === payload.id) setSelU((u: any) => ({ ...u, status: 'probation', tier: 'probation' }));
+      setUsers(us => us.map(u => u.id === payload.id ? { ...u, status: 'probation' } : u));
+      if (selU?.id === payload.id) setSelU((u: any) => ({ ...u, status: 'probation' }));
       addAudit('Set probation', 'user', payload.id, payload.name, 'Status set to probation');
       toast('User set to probation.');
-    } else if (action === 'setTier') {
-      setUsers(us => us.map(u => u.id === payload.id ? { ...u, tier: payload.tier } : u));
-      if (selU?.id === payload.id) setSelU((u: any) => ({ ...u, tier: payload.tier }));
-      addAudit('Updated vendor tier', 'user', payload.id, 'Vendor', `Tier → ${payload.tier}`);
-      toast(`Tier set to ${payload.tier}.`);
     } else if (action === 'addNote') {
       addNote(payload.entityType, payload.entityId, selU?.name ?? '', payload.text);
     } else if (action === 'viewConvs') {
@@ -212,6 +235,22 @@ export default function SupportConsole({ user }: { user: any }) {
     } else if (action === 'suppress') {
       toast('Listing suppressed from search.');
       addAudit('Suppressed listing', 'listing', payload.id, payload.title, 'Removed from search results');
+    } else if (action === 'approveDoc') {
+      const upd = (l: any) => l.id === payload.listingId
+        ? { ...l, documents: l.documents?.map((d: any) => d.id === payload.docId ? { ...d, status: 'approved', reviewedBy: user.name, reviewedAt: new Date().toISOString() } : d) }
+        : l;
+      setListings(ls => ls.map(upd));
+      if (selL?.id === payload.listingId) setSelL((l: any) => upd(l));
+      addAudit('Approved document', 'listing', payload.listingId, payload.title, `Document approved: ${payload.docLabel}`);
+      toast('Document approved.');
+    } else if (action === 'rejectDoc') {
+      const upd = (l: any) => l.id === payload.listingId
+        ? { ...l, documents: l.documents?.map((d: any) => d.id === payload.docId ? { ...d, status: 'rejected', reviewedBy: user.name, reviewedAt: new Date().toISOString() } : d) }
+        : l;
+      setListings(ls => ls.map(upd));
+      if (selL?.id === payload.listingId) setSelL((l: any) => upd(l));
+      addAudit('Rejected document', 'listing', payload.listingId, payload.title, `Document rejected: ${payload.docLabel}`);
+      toast('Document rejected.');
     } else if (action === 'edit') {
       toast('Edit → Sharetribe API (Abhi)');
     }
@@ -297,17 +336,18 @@ export default function SupportConsole({ user }: { user: any }) {
   };
 
   // ─── TABS CONFIG ────────────────────────────────────────────────────────────
+  const pendingDocCount = listings.reduce((sum: number, l: any) => sum + ((l.documents ?? []).filter((d: any) => d.status === 'pending').length), 0);
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', alert: 0 },
     { id: 'users', label: 'Users', count: users.length, alert: 0 },
-    { id: 'listings', label: 'Listings', count: listings.length, alert: 0 },
+    { id: 'listings', label: 'Listings', count: listings.length, alert: pendingDocCount },
     { id: 'transactions', label: 'Transactions', count: transactions.length, alert: 0 },
     { id: 'reviews', label: 'Reviews', count: reviews.length, alert: 0 },
     { id: 'conversations', label: 'Conversations', count: convs.length, alert: unrev },
   ];
 
   return (
-    <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", backgroundColor: '#f4f5f7', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ fontFamily: "'Inter',-apple-system,sans-serif", backgroundColor: C.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', transition: 'background-color 0.25s' }}>
 
       {/* TOAST */}
       {toastMsg && (
@@ -366,6 +406,13 @@ export default function SupportConsole({ user }: { user: any }) {
             )}
           </div>
           <div style={{ width: '1px', height: '16px', backgroundColor: 'rgba(255,255,255,0.12)', margin: '0 4px' }} />
+          <button onClick={() => setDarkMode(d => !d)} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} style={{ padding: '5px 7px', background: 'none', border: '1px solid rgba(255,255,255,0.18)', borderRadius: '7px', cursor: 'pointer', color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            onMouseOver={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)')} onMouseOut={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)')}>
+            {darkMode
+              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            }
+          </button>
           <div style={{ width: '30px', height: '30px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 600 }}>{user.name[0]}</div>
           <a href="/" style={{ padding: '6px 12px', background: 'none', border: 'none', fontSize: '12px', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', textDecoration: 'none', fontWeight: 500 }}
             onMouseOver={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.45)')}>Roles</a>
@@ -373,14 +420,16 @@ export default function SupportConsole({ user }: { user: any }) {
       </header>
 
       {/* TAB NAV */}
-      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 28px', display: 'flex', overflowX: 'auto' }}>
+      <div style={{ backgroundColor: C.surface, borderBottom: '1px solid ' + C.border, padding: '0 28px', display: 'flex', overflowX: 'auto', transition: 'background-color 0.25s' }}>
         {tabs.map(t => {
           const active = tab === t.id;
+          const ac = darkMode ? '#e2e8f0' : NAVY;
+          const ic = C.textMuted;
           return (
-            <button key={t.id} onClick={() => changeTab(t.id)} style={{ padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: active ? NAVY : '#9ca3af', borderBottom: active ? `2px solid ${NAVY}` : '2px solid transparent', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
-              <TabIcon id={t.id} color={active ? NAVY : '#9ca3af'} />
+            <button key={t.id} onClick={() => changeTab(t.id)} style={{ padding: '13px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: active ? ac : ic, borderBottom: active ? `2px solid ${darkMode ? '#60a5fa' : NAVY}` : '2px solid transparent', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
+              <TabIcon id={t.id} color={active ? ac : ic} />
               {t.label}
-              {'count' in t && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: active ? NAVY : '#f3f4f6', color: active ? '#fff' : '#9ca3af', fontWeight: 600 }}>{t.count}</span>}
+              {'count' in t && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: active ? (darkMode ? '#334155' : NAVY) : C.surfaceAlt, color: active ? '#fff' : C.textMuted, fontWeight: 600 }}>{t.count}</span>}
               {t.alert > 0 && <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '10px', backgroundColor: '#fdecea', color: '#c62828', fontWeight: 700 }}>{t.alert}</span>}
             </button>
           );
@@ -390,16 +439,20 @@ export default function SupportConsole({ user }: { user: any }) {
       {/* MAIN CONTENT */}
       <div style={{ flex: 1 }}>
         {tab === 'dashboard' ? (
-          <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} />
+          <DashboardTab data={activeData} onNavigate={changeTab} role={currentRole} darkMode={darkMode} />
         ) : (
           <div style={{ padding: '0' }}>
-            <div className="table-container" style={{ backgroundColor: '#fff', borderRadius: '10px', border: '1px solid #e5e7eb', margin: '24px 28px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div className="table-container" style={{ backgroundColor: C.surface, borderRadius: '10px', border: '1px solid ' + C.border, margin: '24px 28px', overflow: 'hidden', boxShadow: darkMode ? 'none' : '0 1px 4px rgba(0,0,0,0.04)', transition: 'background-color 0.25s' }}>
               <TableTab
                 tab={tab}
-                items={currentItems[tab] ?? []}
+                items={pagedItems}
+                totalCount={currentItems[tab]?.length ?? 0}
+                page={page}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
                 sort={sort}
                 filters={filters}
-                setFilters={f => { setFilters(f); }}
+                setFilters={f => { setFilters(f); setPage(1); }}
                 onSort={handleSort}
                 onSelect={item => {
                   if (tab === 'users') setSelU(item);
@@ -413,8 +466,9 @@ export default function SupportConsole({ user }: { user: any }) {
                 tabSearch={tabSearch}
                 setTabSearch={setTabSearch}
                 convFilter={convFilter}
-                setConvFilter={setConvFilter}
+                setConvFilter={f => { setConvFilter(f); setPage(1); }}
                 allConvs={convs}
+                darkMode={darkMode}
               />
             </div>
           </div>

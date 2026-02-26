@@ -18,6 +18,36 @@ export function can(role: Role, action: string): boolean {
   return ROLE_PERMS[role]?.includes(action) ?? false;
 }
 
+// ─── DARK MODE COLOR PALETTE ─────────────────────────────────────────────────
+export function mkC(dark: boolean) {
+  return {
+    bg:          dark ? '#0f172a' : '#f4f5f7',
+    surface:     dark ? '#1e293b' : '#fff',
+    surfaceAlt:  dark ? '#182030' : '#fafafa',
+    border:      dark ? '#334155' : '#e5e7eb',
+    borderLight: dark ? '#243048' : '#f3f4f6',
+    text:        dark ? '#e2e8f0' : '#374151',
+    textMuted:   dark ? '#94a3b8' : '#9ca3af',
+    textFaint:   dark ? '#475569' : '#d1d5db',
+    inputBg:     dark ? '#0f172a' : '#fff',
+    inputBorder: dark ? '#374151' : '#e5e7eb',
+  };
+}
+
+// ─── DOCUMENT VERIFICATION ───────────────────────────────────────────────────
+export type DocStatus = 'pending' | 'approved' | 'rejected';
+
+export interface VendorDocument {
+  id: string;
+  type: string;
+  label: string;
+  url: string;
+  status: DocStatus;
+  submittedAt: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+}
+
 // ─── ENTITIES ─────────────────────────────────────────────────────────────────
 export interface ConsoleUser {
   id: string; name: string; email: string; role: Role; active: boolean; joined: string; lastLogin: string;
@@ -27,7 +57,6 @@ export interface User {
   id: string; name: string; email: string; role: 'vendor' | 'couple';
   status: 'active' | 'suspended' | 'pending' | 'probation'; joined: string;
   listings: number; transactions: number; tawk_id: string; revenue: number;
-  tier?: 'verified' | 'featured' | 'new' | 'probation' | 'standard';
   responseRate?: number; bookingRate?: number; cancellationRate?: number; avgRating?: number;
   repeatFlags?: number;
 }
@@ -36,6 +65,7 @@ export interface Listing {
   id: string; title: string; vendor: string; vendor_id: string;
   price: number; status: 'active' | 'suspended' | 'pending_review'; category: string; created: string;
   views?: number; inquiries?: number; bookings?: number;
+  documents?: VendorDocument[];
 }
 
 export interface Transaction {
@@ -131,6 +161,8 @@ export const STATUS_STYLES: Record<string, { label: string; bg: string; color: s
   featured:       { label:'Featured',       bg:'#fdf4ff', color:'#7e22ce' },
   new:            { label:'New',            bg:'#f0fdf4', color:'#15803d' },
   standard:       { label:'Standard',       bg:'#f3f4f6', color:'#6b7280' },
+  approved:       { label:'Approved',       bg:'#e8f5e9', color:'#2e7d32' },
+  rejected:       { label:'Rejected',       bg:'#fdecea', color:'#c62828' },
 };
 
 // ─── EXPORTS / PRINT ─────────────────────────────────────────────────────────
