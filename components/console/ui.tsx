@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS } from '../lib/types';
+import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS } from '../../lib/types';
 
 // ─── COLORS ───────────────────────────────────────────────────────────────────
 export const NAVY = '#0f1428';
@@ -94,11 +94,12 @@ export function DR({ label, value }: { label: string; value: React.ReactNode }) 
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
 export function Logo({ white }: { white?: boolean }) {
-  const c = white ? '#fff' : NAVY;
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'baseline', fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: '20px', color: c, letterSpacing: '-0.02em' }}>
-      Day<span style={{ position: 'relative', display: 'inline-block' }}>O<span style={{ position: 'absolute', top: '1px', right: '-4px', width: '5px', height: '5px', borderRadius: '50%', backgroundColor: c, display: 'inline-block' }} /></span><span style={{ marginLeft: '9px' }}>f</span>
-    </div>
+    <img
+      src="/images/dayof-logo.png"
+      alt="Day Of"
+      style={{ height: '28px', width: 'auto', filter: white ? 'brightness(0) invert(1)' : 'none' }}
+    />
   );
 }
 
