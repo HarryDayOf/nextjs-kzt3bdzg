@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
-import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS } from '../lib/types';
+import { STATUS_STYLES, KW_CATEGORIES, type KWCategory, type KWHit, type Role, ROLE_LABELS } from '../../lib/types';
 
 // ─── COLORS ───────────────────────────────────────────────────────────────────
 export const NAVY = '#0f1428';
