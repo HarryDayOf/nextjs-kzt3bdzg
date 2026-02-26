@@ -94,12 +94,11 @@ export function DR({ label, value }: { label: string; value: React.ReactNode }) 
 
 // ─── LOGO ─────────────────────────────────────────────────────────────────────
 export function Logo({ white }: { white?: boolean }) {
+  const c = white ? '#fff' : '#0f1428';
   return (
-    <img
-      src="/images/dayof-logo.png"
-      alt="Day Of"
-      style={{ height: '28px', width: 'auto', filter: white ? 'brightness(0) invert(1)' : 'none' }}
-    />
+    <span style={{ fontFamily: 'Georgia,serif', fontWeight: 700, fontSize: '22px', color: c, letterSpacing: '-0.02em' }}>
+      Day<span style={{ fontStyle: 'italic' }}>of</span>
+    </span>
   );
 }
 
