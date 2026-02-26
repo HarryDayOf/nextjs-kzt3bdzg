@@ -38,11 +38,85 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
 
   const highRiskConvs = conversations.filter((c: any) => riskScore(c) >= 60);
 
+  // Moderation queue — items needing action
+  const queue: { label: string; detail: string; level: string; tab: string }[] = [
+    ...unreviewedConvs.map((c: any) => ({ label: `Flagged conversation`, detail: `${c.participants?.[0]} & ${c.participants?.[1]} · ${c.listing ?? ''}`, level: 'critical', tab: 'conversations' })),
+    ...flaggedReviews.map((r: any) => ({ label: `Flagged review`, detail: `by ${r.author} · ${r.rating}★ — "${r.content?.slice(0, 60)}${r.content?.length > 60 ? '…' : ''}"`, level: 'warning', tab: 'reviews' })),
+    ...repeatOffenders.map((u: any) => ({ label: `Repeat offender`, detail: `${u.name} · ${u.email} · ${u.repeatFlags} flags`, level: 'critical', tab: 'users' })),
+    ...(pendingListings > 0 ? [{ label: `${pendingListings} listing${pendingListings > 1 ? 's' : ''} pending review`, detail: 'Awaiting approval before going live', level: 'info', tab: 'listings' }] : []),
+  ];
+
+  const queueColors: Record<string, { dot: string; label: string; bg: string }> = {
+    critical: { dot: '#c62828', label: '#c62828', bg: '#fdecea' },
+    warning:  { dot: '#b45309', label: '#b45309', bg: '#fff8e1' },
+    info:     { dot: '#0369a1', label: '#0369a1', bg: '#e0f2fe' },
+  };
+
+  if (!isLeadership) {
+    return (
+      <div style={{ padding: '28px 32px' }}>
+
+        {/* MODERATION STATS */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
+          <StatCard label="Unreviewed Flags" value={unreviewedConvs.length} color={unreviewedConvs.length > 0 ? '#c62828' : undefined} sub={`${flaggedConvs.length} total flagged`} onClick={() => onNavigate('conversations')} />
+          <StatCard label="High Risk Convs" value={highRiskConvs.length} color={highRiskConvs.length > 0 ? '#c62828' : undefined} sub="Score ≥ 60" onClick={() => onNavigate('conversations')} />
+          <StatCard label="Flagged Reviews" value={flaggedReviews.length} color={flaggedReviews.length > 0 ? '#b45309' : undefined} sub="Need moderation" onClick={() => onNavigate('reviews')} />
+          <StatCard label="Repeat Offenders" value={repeatOffenders.length} color={repeatOffenders.length > 0 ? '#c62828' : undefined} sub="≥2 policy flags" onClick={() => onNavigate('users')} />
+        </div>
+
+        {/* NEEDS ATTENTION QUEUE */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+          <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Needs Attention
+              <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>{queue.length} item{queue.length !== 1 ? 's' : ''}</span>
+            </div>
+            {queue.length === 0
+              ? <div style={{ color: '#9ca3af', fontSize: '13px', padding: '12px 0' }}>All clear — nothing needs attention.</div>
+              : queue.map((item, i) => {
+                  const c = queueColors[item.level];
+                  return (
+                    <div key={i} onClick={() => onNavigate(item.tab)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '11px 0', borderBottom: i < queue.length - 1 ? '1px solid #f3f4f6' : 'none', cursor: 'pointer' }}
+                      onMouseOver={e => (e.currentTarget.style.backgroundColor = '#fafafa')} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                      <span style={{ width: '7px', height: '7px', borderRadius: '50%', backgroundColor: c.dot, flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: c.label }}>{item.label}</div>
+                        <div style={{ fontSize: '11px', color: '#9ca3af', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.detail}</div>
+                      </div>
+                      <span style={{ fontSize: '11px', color: '#d1d5db', flexShrink: 0 }}>View →</span>
+                    </div>
+                  );
+                })
+            }
+          </div>
+
+          {/* SUSPENDED USERS */}
+          <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: NAVY, marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              Suspended Users
+              <span style={{ fontSize: '11px', color: '#9ca3af', fontWeight: 400 }}>{suspendedUsers} total</span>
+            </div>
+            {users.filter((u: any) => u.status === 'suspended').length === 0
+              ? <div style={{ color: '#9ca3af', fontSize: '13px' }}>None currently suspended.</div>
+              : users.filter((u: any) => u.status === 'suspended').map((u: any) => (
+                <div key={u.id} onClick={() => onNavigate('users')} style={{ padding: '9px 0', borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                  onMouseOver={e => (e.currentTarget.style.backgroundColor = '#fafafa')} onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}>
+                  <div style={{ fontSize: '13px', fontWeight: 500, color: NAVY }}>{u.name}</div>
+                  <div style={{ fontSize: '11px', color: '#9ca3af' }}>{u.role} · {u.email}</div>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: '28px 32px' }}>
 
       {/* ACTIVE ALERTS */}
-      {isLeadership && activeAlerts.length > 0 && (
+      {activeAlerts.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: '2px' }}>Alerts</span>
           {activeAlerts.map((a, i) => {
@@ -74,7 +148,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
       </div>
 
       {/* CHARTS */}
-      {isLeadership && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="gmv" label="Weekly GMV ($)" color={NAVY} />
         </div>
@@ -84,10 +158,10 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="disputes" label="Disputes per Week" color="#c62828" />
         </div>
-      </div>}
+      </div>
 
       {/* BOTTOM PANELS */}
-      {isLeadership && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
         {/* REPEAT OFFENDERS */}
         <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '20px' }}>
@@ -132,7 +206,7 @@ export function DashboardTab({ data, onNavigate, role }: { data: any; onNavigate
           </table>
         </div>
 
-      </div>}
+      </div>
     </div>
   );
 }
