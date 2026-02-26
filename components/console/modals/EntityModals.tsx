@@ -7,54 +7,121 @@ import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, mkC, type 
 // ─── USER MODAL ───────────────────────────────────────────────────────────────
 export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUser, darkMode }: any) {
   const C = mkC(darkMode ?? false);
-  const [tab, setTab] = useState<'info' | 'history' | 'notes'>('info');
+  const [tab, setTab] = useState<'info' | 'stripe' | 'security' | 'notes'>('info');
   const tabActive = darkMode ? '#e2e8f0' : NAVY;
   const tabBorder = darkMode ? '#60a5fa' : NAVY;
+  const dupeCount = (user.duplicateFlags ?? []).length;
+  const mono = { fontFamily: 'monospace', fontSize: '11px', color: C.textMuted } as const;
 
   return (
     <Modal title={user.name} subtitle={user.id} onClose={onClose} wide darkMode={darkMode}>
       <div style={{ display: 'flex', gap: '0', marginBottom: '20px', borderBottom: '1px solid ' + C.borderLight }}>
-        {(['info', 'history', 'notes'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', background: 'none', border: 'none', borderBottom: tab === t ? `2px solid ${tabBorder}` : '2px solid transparent', fontSize: '13px', color: tab === t ? tabActive : C.textMuted, cursor: 'pointer', fontWeight: tab === t ? 600 : 400, textTransform: 'capitalize', marginBottom: '-1px' }}>
-            {t === 'notes' ? `Notes (${notes.filter((n: any) => n.entity_id === user.id).length})` : t}
+        {(['info', 'stripe', 'security', 'notes'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{ padding: '8px 16px', background: 'none', border: 'none', borderBottom: tab === t ? `2px solid ${tabBorder}` : '2px solid transparent', fontSize: '13px', color: tab === t ? tabActive : C.textMuted, cursor: 'pointer', fontWeight: tab === t ? 600 : 400, textTransform: 'capitalize', marginBottom: '-1px', position: 'relative' }}>
+            {t === 'notes' ? `Notes (${notes.filter((n: any) => n.entity_id === user.id).length})` : t === 'stripe' ? 'Stripe' : t === 'security' ? 'Security' : t}
+            {t === 'security' && dupeCount > 0 && <span style={{ position: 'absolute', top: '2px', right: '-2px', width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#c62828', color: '#fff', fontSize: '10px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{dupeCount}</span>}
           </button>
         ))}
       </div>
 
+      {/* ── INFO TAB ── */}
       {tab === 'info' && <>
         <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
           <Badge status={user.status} />
           {(user.repeatFlags ?? 0) >= 2 && <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, backgroundColor: darkMode ? '#2a1215' : '#fdecea', color: darkMode ? '#fca5a5' : '#c62828' }}>⚠ {user.repeatFlags} policy flags</span>}
+          {dupeCount > 0 && <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, backgroundColor: darkMode ? '#2a1a05' : '#fff3e0', color: darkMode ? '#fcd34d' : '#e65100', cursor: 'pointer' }} onClick={() => setTab('security')}>🔍 {dupeCount} duplicate flag{dupeCount > 1 ? 's' : ''}</span>}
         </div>
-        <DR label="User ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: C.textMuted }}>{user.id}</span>} copyValue={user.id} darkMode={darkMode} />
-        <DR label="Tawk.to ID" value={<span style={{ fontFamily: 'monospace', fontSize: '11px', color: C.textMuted }}>{user.tawk_id}</span>} copyValue={user.tawk_id} darkMode={darkMode} />
-        <DR label="Email" value={user.email} copyValue={user.email} darkMode={darkMode} />
+        <DR label="User ID" value={<span style={mono}>{user.id}</span>} copyValue={user.id} darkMode={darkMode} />
+        <DR label="Tawk.to ID" value={<span style={mono}>{user.tawk_id}</span>} copyValue={user.tawk_id} darkMode={darkMode} />
+        <DR label="Email" value={<>{user.email} {user.emailVerified ? <span style={{ color: '#2e7d32', fontSize: '11px', fontWeight: 600 }}>✓ verified</span> : <span style={{ color: '#c62828', fontSize: '11px', fontWeight: 600 }}>✗ unverified</span>}</>} copyValue={user.email} darkMode={darkMode} />
         <DR label="Role" value={user.role} darkMode={darkMode} />
         <DR label="Joined" value={user.joined} darkMode={darkMode} />
         <DR label="Transactions" value={String(user.transactions)} darkMode={darkMode} />
-        {user.role === 'vendor' && <>
-          <DR label="Lifetime Revenue" value={`$${(user.revenue ?? 0).toLocaleString()}`} darkMode={darkMode} />
-        </>}
-
+        {user.role === 'vendor' && <DR label="Lifetime Revenue" value={`$${(user.revenue ?? 0).toLocaleString()}`} darkMode={darkMode} />}
         <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
           <Btn variant="primary" label="Edit Profile" onClick={() => onAction('edit', user)} darkMode={darkMode} />
           <Btn variant={user.status === 'suspended' ? 'success' : 'danger'} label={user.status === 'suspended' ? 'Unsuspend' : 'Suspend'} onClick={() => onAction('toggleSuspend', user)} darkMode={darkMode} />
-          {user.status !== 'probation' && user.role === 'vendor' && <Btn variant="warning" label="Set Probation" onClick={() => onAction('probation', user)} darkMode={darkMode} />}
+          {user.status !== 'probation' && <Btn variant="warning" label="Set Probation" onClick={() => onAction('probation', user)} darkMode={darkMode} />}
           <Btn label="Open in Tawk.to" onClick={() => onAction('tawk', user)} darkMode={darkMode} />
           <Btn label="View Conversations" onClick={() => onAction('viewConvs', user)} darkMode={darkMode} />
           <Btn label="Send Message" onClick={() => onAction('message', user)} darkMode={darkMode} />
         </div>
       </>}
 
-      {tab === 'history' && (
-        <div>
-          <div style={{ fontSize: '13px', color: C.textMuted, marginBottom: '12px' }}>Full activity history for this user — transactions, reviews, conversations.</div>
-          <div style={{ backgroundColor: C.surfaceAlt, borderRadius: '8px', padding: '16px', border: '1px solid ' + C.borderLight, color: C.textMuted, fontSize: '13px', textAlign: 'center' }}>
-            Activity history will pull live from Sharetribe API. Wired up by Abhi.
-          </div>
+      {/* ── STRIPE TAB ── */}
+      {tab === 'stripe' && <>
+        {user.role === 'vendor' ? <>
+          <DR label="Stripe Account ID" value={user.stripeAccountId ? <span style={mono}>{user.stripeAccountId}</span> : <span style={{ color: C.textMuted, fontStyle: 'italic' }}>Not connected</span>} copyValue={user.stripeAccountId} darkMode={darkMode} />
+          <DR label="Connected" value={user.stripeConnected ? <span style={{ color: '#2e7d32', fontWeight: 600 }}>✓ Connected</span> : <span style={{ color: '#c62828', fontWeight: 600 }}>✗ Not connected</span>} darkMode={darkMode} />
+          <DR label="Payouts" value={user.payoutsEnabled ? <span style={{ color: '#2e7d32' }}>✓ Enabled</span> : <span style={{ color: '#c62828' }}>✗ Disabled</span>} darkMode={darkMode} />
+          <DR label="Charges" value={user.chargesEnabled ? <span style={{ color: '#2e7d32' }}>✓ Enabled</span> : <span style={{ color: '#c62828' }}>✗ Disabled</span>} darkMode={darkMode} />
+          {user.status === 'suspended' && user.stripeConnected && (
+            <div style={{ marginTop: '12px', padding: '12px 16px', backgroundColor: darkMode ? '#2a1215' : '#fdecea', border: `1px solid ${darkMode ? '#7f1d1d' : '#fca5a5'}`, borderRadius: '8px', fontSize: '12px', color: darkMode ? '#fca5a5' : '#c62828' }}>
+              ⚠ Payouts and charges disabled due to account suspension
+            </div>
+          )}
+        </> : <>
+          <DR label="Stripe Customer ID" value={user.stripeCustomerId ? <span style={mono}>{user.stripeCustomerId}</span> : <span style={{ color: C.textMuted, fontStyle: 'italic' }}>Not set up</span>} copyValue={user.stripeCustomerId} darkMode={darkMode} />
+        </>}
+        <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
+          <Btn variant="primary" label="Open in Stripe Dashboard" onClick={() => onAction('stripe', user)} darkMode={darkMode} />
+          {user.role === 'vendor' && !user.stripeConnected && <Btn label="Send Onboarding Link" onClick={() => onAction('stripeInvite', user)} darkMode={darkMode} />}
+          {user.role === 'vendor' && user.stripeConnected && <Btn label="View Payouts" onClick={() => onAction('stripePayouts', user)} darkMode={darkMode} />}
         </div>
-      )}
+      </>}
 
+      {/* ── SECURITY TAB ── */}
+      {tab === 'security' && <>
+        {/* Duplicate flags */}
+        {dupeCount > 0 && (
+          <div style={{ marginBottom: '16px', padding: '14px 16px', backgroundColor: darkMode ? '#2a1a05' : '#fff3e0', border: `1px solid ${darkMode ? '#854d0e' : '#fbbf24'}`, borderRadius: '8px' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: darkMode ? '#fcd34d' : '#b45309', marginBottom: '10px' }}>🔍 Potential Duplicate Account{dupeCount > 1 ? 's' : ''} Detected</div>
+            {(user.duplicateFlags ?? []).map((f: any, i: number) => (
+              <div key={i} style={{ padding: '8px 12px', backgroundColor: darkMode ? '#1e293b' : '#fff', borderRadius: '6px', marginBottom: i < dupeCount - 1 ? '6px' : '0', border: '1px solid ' + C.borderLight }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{f.matchedUserName}</span>
+                  <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', backgroundColor: f.confidence === 'high' ? (darkMode ? '#2a1215' : '#fdecea') : (darkMode ? '#2a1a05' : '#fff8e1'), color: f.confidence === 'high' ? (darkMode ? '#fca5a5' : '#c62828') : (darkMode ? '#fcd34d' : '#b45309'), textTransform: 'uppercase' }}>{f.confidence}</span>
+                </div>
+                <div style={{ fontSize: '11px', color: C.textMuted, marginTop: '4px', fontFamily: 'monospace' }}>{f.reason}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <DR label="Email Verified" value={user.emailVerified ? <span style={{ color: '#2e7d32', fontWeight: 600 }}>✓ Verified</span> : <span style={{ color: '#c62828', fontWeight: 600 }}>✗ Not verified</span>} darkMode={darkMode} />
+        <DR label="Identity Providers" value={user.identityProviders?.length ? user.identityProviders.map((p: any) => <span key={p.provider} style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '4px', fontSize: '11px', backgroundColor: darkMode ? '#1e3a5f' : '#e0f2fe', color: darkMode ? '#93c5fd' : '#0369a1', marginRight: '4px', fontWeight: 500 }}>{p.provider}</span>) : <span style={{ color: C.textMuted, fontStyle: 'italic' }}>Email / password only</span>} darkMode={darkMode} />
+        <DR label="Signup IP" value={<span style={mono}>{user.signupIp ?? '—'}</span>} copyValue={user.signupIp} darkMode={darkMode} />
+        <DR label="Last Login IP" value={<span style={mono}>{user.lastLoginIp ?? '—'}</span>} copyValue={user.lastLoginIp} darkMode={darkMode} />
+        <DR label="Last Login" value={user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'} darkMode={darkMode} />
+        <DR label="Device Fingerprint" value={<span style={mono}>{user.deviceFingerprint ?? '—'}</span>} copyValue={user.deviceFingerprint} darkMode={darkMode} />
+
+        {/* Login History */}
+        {(user.loginHistory?.length ?? 0) > 0 && <>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: '20px', marginBottom: '8px' }}>Login History</div>
+          <div style={{ borderRadius: '8px', border: '1px solid ' + C.border, overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ backgroundColor: C.surfaceAlt }}>
+                  {['Date', 'IP Address', 'Device'].map(h => (
+                    <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: '10px', fontWeight: 600, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid ' + C.border }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(user.loginHistory ?? []).slice(0, 10).map((entry: any, i: number) => (
+                  <tr key={i} style={{ borderBottom: '1px solid ' + C.borderLight }}>
+                    <td style={{ padding: '7px 12px', color: C.text }}>{new Date(entry.ts).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</td>
+                    <td style={{ padding: '7px 12px' }}><span style={mono}>{entry.ip}</span> <CopyBtn value={entry.ip} size={10} /></td>
+                    <td style={{ padding: '7px 12px', color: C.textMuted }}>{entry.device}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>}
+      </>}
+
+      {/* ── NOTES TAB ── */}
       {tab === 'notes' && (
         <NotesPanel entityType="user" entityId={user.id} notes={notes} onAddNote={(text) => onAction('addNote', { entityType: 'user', entityId: user.id, text })} currentUser={currentUser} darkMode={darkMode} />
       )}
@@ -318,9 +385,14 @@ export function ConversationModal({ conv, notes, onClose, onAction, currentUser,
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {!conv.reviewed && <Btn variant="success" label="Mark Reviewed" onClick={() => onAction('markReviewed', conv)} darkMode={darkMode} />}
           <Btn label="View Vendor" onClick={() => onAction('viewVendor', conv)} darkMode={darkMode} />
+          <Btn label="View Couple" onClick={() => onAction('viewCouple', conv)} darkMode={darkMode} />
           {conv.txn_id && <Btn label="View Transaction" onClick={() => onAction('viewTransaction', conv)} darkMode={darkMode} />}
-          {conv.status === 'flagged' && <Btn variant="danger" label="Suspend Vendor" onClick={() => onAction('suspendVendor', conv)} darkMode={darkMode} />}
-          {conv.status === 'flagged' && <Btn variant="warning" label="Send Policy Warning" onClick={() => onAction('policyWarning', conv)} darkMode={darkMode} />}
+          {conv.status === 'flagged' && <>
+            <Btn variant="danger" label="Suspend Vendor" onClick={() => onAction('suspendVendor', conv)} darkMode={darkMode} />
+            <Btn variant="danger" label="Suspend Couple" onClick={() => onAction('suspendCouple', conv)} darkMode={darkMode} />
+            <Btn variant="warning" label="Warn Vendor" onClick={() => onAction('policyWarning', conv)} darkMode={darkMode} />
+            <Btn variant="warning" label="Warn Couple" onClick={() => onAction('warnCouple', conv)} darkMode={darkMode} />
+          </>}
         </div>
       </>}
 

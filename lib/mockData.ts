@@ -57,12 +57,102 @@ function _genUsers(): User[] {
       const name = `${f1} & ${f2} ${last}`;
       const email = `${f1.toLowerCase()}.${last.toLowerCase()}@${_domains[idx % _domains.length]}`;
       const txns = Math.floor(Math.abs(Math.sin(idx * 2.71) * 6));
-      extra.push({ id, name, email, role: 'couple', status: status === 'pending' ? 'active' : status === 'probation' ? 'active' : status, joined, listings: 0, transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: 0, repeatFlags: 0 });
+      const coupleStatus = idx % 25 === 0 ? 'suspended' : idx % 30 === 0 ? 'probation' : status === 'pending' ? 'active' : status === 'probation' ? 'active' : status;
+      const coupleFlags = coupleStatus === 'suspended' ? 2 + (idx % 2) : coupleStatus === 'probation' ? 1 : idx % 18 === 0 ? 1 : 0;
+      extra.push({ id, name, email, role: 'couple', status: coupleStatus, joined, listings: 0, transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: 0, repeatFlags: coupleFlags });
     }
   }
   return [...seed, ...extra];
 }
-export const MOCK_USERS: User[] = _genUsers();
+
+// ─── USER ENRICHMENT (Stripe · Tracking · Duplicate Detection) ──────────────
+const _ipPfx = ['98.142.33','172.56.21','74.92.108','206.71.44','152.38.92','45.127.55','68.205.17','99.163.82','184.93.76','71.245.11','203.88.15','147.52.98','64.233.44','159.203.71','92.117.36'];
+const _devs = ['Chrome 121 / macOS','Safari / iOS 17','Chrome 120 / Windows 11','Firefox 121 / Ubuntu','Chrome 121 / Android 14','Safari / macOS Sonoma','Edge 121 / Windows 11','Chrome 120 / ChromeOS'];
+const _idps: (null | { provider: string; userId: string })[] = [
+  { provider: 'google', userId: '104523891234567890' }, null, { provider: 'facebook', userId: '10234567890123456' }, null,
+  null, { provider: 'apple', userId: '001234.abc123def456.0789' }, null, { provider: 'google', userId: '115678901234567890' },
+];
+
+function _enrichUsers(users: User[]): User[] {
+  return users.map((u, i) => {
+    const isV = u.role === 'vendor';
+    const ip = `${_ipPfx[i % _ipPfx.length]}.${1 + ((i * 7) % 254)}`;
+    const s36 = (n: number) => (n >>> 0).toString(36);
+    const stripeAcct = isV ? `acct_${s36(i * 2654435761)}${s36(i * 40503)}`.slice(0, 21) : undefined;
+    const stripeCust = !isV ? `cus_${s36(i * 1234567891)}${s36(i * 98765)}`.slice(0, 18) : undefined;
+    const connected = isV ? u.status !== 'pending' : undefined;
+    const dev = _devs[i % _devs.length];
+    const idp = _idps[i % _idps.length];
+    const fp = `fp_${((i * 0xdeadbeef) >>> 0).toString(16).padStart(8, '0')}${((i * 0xcafebabe) >>> 0).toString(16).padStart(4, '0')}`;
+    const histCount = 3 + (i % 3);
+    const loginHistory: LoginEntry[] = [];
+    for (let hi = 0; hi < histCount; hi++) {
+      const d = new Date(2025, 1, 25 - hi * (2 + (i % 5)), 8 + (hi % 12), (i * 7 + hi * 13) % 60);
+      loginHistory.push({
+        ip: hi === 0 ? ip : `${_ipPfx[(i + hi) % _ipPfx.length]}.${1 + ((i * 3 + hi * 11) % 254)}`,
+        ts: d.toISOString().replace(/\.\d+Z$/, 'Z'),
+        userAgent: `Mozilla/5.0 (${dev.includes('macOS') ? 'Macintosh; Intel Mac OS X 10_15_7' : dev.includes('Windows') ? 'Windows NT 10.0; Win64; x64' : dev.includes('iOS') ? 'iPhone; CPU iPhone OS 17_0' : dev.includes('Android') ? 'Linux; Android 14' : 'X11; Linux x86_64'})`,
+        device: dev,
+      });
+    }
+    return {
+      ...u,
+      ...(stripeAcct ? { stripeAccountId: stripeAcct, stripeConnected: connected, payoutsEnabled: connected && u.status !== 'suspended', chargesEnabled: connected && u.status !== 'suspended' } : {}),
+      ...(stripeCust ? { stripeCustomerId: stripeCust } : {}),
+      emailVerified: u.status !== 'pending' && i % 20 !== 0,
+      ...(idp ? { identityProviders: [idp] } : {}),
+      lastLoginIp: ip, lastLoginAt: loginHistory[0]?.ts, signupIp: ip,
+      loginHistory, deviceFingerprint: fp,
+    };
+  });
+}
+
+function _assignDuplicates(users: User[]): void {
+  // Create 12 IP clusters — pairs/triples sharing same signup IP (simulates ban evasion, shared household, etc.)
+  for (let c = 0; c < 12; c++) {
+    const a = 8 + c * 12; const b = a + 4;
+    const sharedIp = `98.142.${50 + c}.${200 + c}`;
+    [a, b, ...(c % 3 === 0 ? [a + 8] : [])].forEach(idx => {
+      if (idx < users.length) {
+        users[idx].signupIp = sharedIp;
+        users[idx].lastLoginIp = sharedIp;
+        if (users[idx].loginHistory?.length) users[idx].loginHistory![0].ip = sharedIp;
+      }
+    });
+  }
+  // Create 8 device fingerprint clusters — same device used for multiple accounts
+  for (let c = 0; c < 8; c++) {
+    const a = 6 + c * 18; const b = a + 6;
+    const sharedFp = `fp_dup${String(c).padStart(2, '0')}${((c * 0xabcdef01) >>> 0).toString(16).slice(0, 6)}`;
+    [a, b].forEach(idx => { if (idx < users.length) users[idx].deviceFingerprint = sharedFp; });
+  }
+  // Detect shared IPs and device fingerprints → create DuplicateFlag entries
+  const ipMap = new Map<string, number[]>();
+  const fpMap = new Map<string, number[]>();
+  users.forEach((u, i) => {
+    if (u.signupIp) { const a = ipMap.get(u.signupIp) || []; a.push(i); ipMap.set(u.signupIp, a); }
+    if (u.deviceFingerprint) { const a = fpMap.get(u.deviceFingerprint) || []; a.push(i); fpMap.set(u.deviceFingerprint, a); }
+  });
+  const addFlags = (map: Map<string, number[]>, reasonFn: (u: User) => string) => {
+    map.forEach(indices => {
+      if (indices.length < 2) return;
+      indices.forEach(i => {
+        const u = users[i]; if (!u.duplicateFlags) u.duplicateFlags = [];
+        indices.forEach(j => {
+          if (i === j) return;
+          const o = users[j];
+          const hasBanned = u.status === 'suspended' || o.status === 'suspended';
+          if (!u.duplicateFlags!.find(f => f.matchedUserId === o.id && f.reason === reasonFn(u)))
+            u.duplicateFlags!.push({ matchedUserId: o.id, matchedUserName: o.name, reason: reasonFn(u), confidence: hasBanned ? 'high' : 'medium', detectedAt: '2025-02-20T10:00:00Z' });
+        });
+      });
+    });
+  };
+  addFlags(ipMap, (u) => `Shared signup IP: ${u.signupIp}`);
+  addFlags(fpMap, (u) => `Same device fingerprint: ${u.deviceFingerprint}`);
+}
+
+export const MOCK_USERS: User[] = (() => { const u = _enrichUsers(_genUsers()); _assignDuplicates(u); return u; })();
 const _V = MOCK_USERS.filter(u => u.role === 'vendor');
 const _CO = MOCK_USERS.filter(u => u.role === 'couple');
 
@@ -394,6 +484,39 @@ const _convScripts: { status: 'clean' | 'flagged'; msgs: _MsgT[] }[] = [
     [1, "No worries! I can put it together here too. How many guests?"],
     [0, "About 180 guests, ballroom reception."],
     [1, "Lovely! I'll have a proposal to you by end of week right here on the platform."],
+  ]},
+  // 15 — Flagged: COUPLE pushes Venmo to vendor
+  { status: 'flagged', msgs: [
+    [0, "Hi! We love your work. Can we just Venmo you the deposit directly? It would be faster for us."],
+    [1, "Thanks for the interest! I actually prefer to keep everything through the platform for both our protection."],
+    [0, "We just figured we could avoid fees that way."],
+    [1, "I understand, but the platform handles contracts and insurance. Let's book through here!"],
+    [0, "Okay, that makes sense. We'll book through the platform."],
+  ]},
+  // 16 — Flagged: COUPLE shares personal contact + off platform
+  { status: 'flagged', msgs: [
+    [0, "Hey! Text me at my number — this app messaging is too slow. We can sort out details faster."],
+    [1, "I appreciate that! But I keep all wedding communications on the platform so everything is documented."],
+    [0, "Can we at least email? Our address is couple2025@gmail.com."],
+    [1, "Let's keep it here for now — it protects us both. What details do you need to discuss?"],
+    [0, "Fair enough. We want to customize the package a bit."],
+    [1, "Happy to help with that right here! Tell me what you're thinking."],
+  ]},
+  // 17 — Flagged: COUPLE suggests booking directly
+  { status: 'flagged', msgs: [
+    [0, "We found your website and we could book directly with you to skip the platform fees. What do you think?"],
+    [1, "I appreciate the thought, but I'm committed to working through Day Of. The platform protects both of us."],
+    [0, "What if we did a direct booking and just kept the conversation here?"],
+    [1, "Sorry, all my bookings go through the platform. It handles contracts, payments, and insurance."],
+    [0, "Okay, we understand. Let's proceed through the platform then."],
+  ]},
+  // 18 — Flagged: COUPLE pushes CashApp
+  { status: 'flagged', msgs: [
+    [0, "Can we pay through CashApp? We don't love putting our card on random platforms."],
+    [1, "The platform uses Stripe which is very secure. I'd recommend going through the booking flow here."],
+    [0, "We've just had bad experiences with online payments before."],
+    [1, "Totally understand the concern. Stripe is the same processor used by major retailers. Very safe!"],
+    [0, "Alright, we'll trust the process. Going to book now."],
   ]},
 ];
 
