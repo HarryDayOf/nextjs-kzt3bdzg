@@ -2,7 +2,7 @@
 'use client';
 import { useState } from 'react';
 import { Modal, DR, Btn, Badge, IdChip, RoleBadge, KWChip, NotesPanel, highlightKeywords, NAVY } from '../ui';
-import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, type KWHit, type Role } from '../../lib/types';
+import { detectKeywords, uniqueHits, riskScore, riskColor, riskLabel, type KWHit, type Role } from '../../../lib/types';
 
 // ─── USER MODAL ───────────────────────────────────────────────────────────────
 export function UserModal({ user, notes, onClose, onAction, onAddNote, currentUser }: any) {
