@@ -66,6 +66,7 @@ export interface User {
   id: string; name: string; email: string; role: 'vendor' | 'couple';
   status: 'active' | 'suspended' | 'pending' | 'probation'; joined: string;
   listings: number; transactions: number; tawk_id: string; revenue: number;
+  city?: string; state?: string;
   responseRate?: number; bookingRate?: number; cancellationRate?: number; avgRating?: number;
   repeatFlags?: number;
   // Stripe

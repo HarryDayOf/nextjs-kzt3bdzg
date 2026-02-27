@@ -19,14 +19,66 @@ const _domains = ['gmail.com','icloud.com','outlook.com','yahoo.com'];
 const _vendorDomains = ['.co','.com','.studio','.events'];
 const _statuses: User['status'][] = ['active','active','active','active','active','active','active','active','active','active','active','suspended','pending','probation'];
 function _uid(i: number) { const h = (n: number) => n.toString(16).padStart(8, '0'); return `${h(i * 2654435761 >>> 0)}-${h(i * 40503 >>> 0).slice(0,4)}-4${h(i * 12345 >>> 0).slice(1,4)}-${h(i * 98765 >>> 0).slice(0,4)}-${h(i * 777 + 42 >>> 0).slice(0,4)}${h(i * 333 >>> 0)}`; }
+
+// ─── US CITY DATA (for map card) ──────────────────────────────────────────────
+const US_CITIES: { city: string; state: string; svgX: number; svgY: number; weight: number }[] = [
+  // Northeast
+  { city: 'New York', state: 'NY', svgX: 820, svgY: 195, weight: 8 },
+  { city: 'Boston', state: 'MA', svgX: 845, svgY: 175, weight: 4 },
+  { city: 'Philadelphia', state: 'PA', svgX: 805, svgY: 215, weight: 3 },
+  { city: 'Washington DC', state: 'DC', svgX: 795, svgY: 240, weight: 4 },
+  { city: 'Pittsburgh', state: 'PA', svgX: 755, svgY: 218, weight: 2 },
+  // Southeast
+  { city: 'Charleston', state: 'SC', svgX: 770, svgY: 330, weight: 5 },
+  { city: 'Savannah', state: 'GA', svgX: 758, svgY: 350, weight: 3 },
+  { city: 'Nashville', state: 'TN', svgX: 690, svgY: 298, weight: 6 },
+  { city: 'Atlanta', state: 'GA', svgX: 720, svgY: 330, weight: 4 },
+  { city: 'Miami', state: 'FL', svgX: 775, svgY: 452, weight: 4 },
+  { city: 'Orlando', state: 'FL', svgX: 765, svgY: 410, weight: 3 },
+  { city: 'Raleigh', state: 'NC', svgX: 782, svgY: 290, weight: 2 },
+  { city: 'New Orleans', state: 'LA', svgX: 645, svgY: 398, weight: 3 },
+  // Midwest
+  { city: 'Chicago', state: 'IL', svgX: 640, svgY: 210, weight: 5 },
+  { city: 'Minneapolis', state: 'MN', svgX: 560, svgY: 145, weight: 2 },
+  { city: 'Detroit', state: 'MI', svgX: 705, svgY: 195, weight: 2 },
+  { city: 'Columbus', state: 'OH', svgX: 725, svgY: 232, weight: 2 },
+  { city: 'Indianapolis', state: 'IN', svgX: 675, svgY: 245, weight: 2 },
+  { city: 'Kansas City', state: 'MO', svgX: 555, svgY: 270, weight: 2 },
+  { city: 'St. Louis', state: 'MO', svgX: 618, svgY: 272, weight: 2 },
+  // South / Southwest
+  { city: 'Austin', state: 'TX', svgX: 525, svgY: 400, weight: 7 },
+  { city: 'Dallas', state: 'TX', svgX: 535, svgY: 368, weight: 4 },
+  { city: 'Houston', state: 'TX', svgX: 558, svgY: 410, weight: 3 },
+  { city: 'San Antonio', state: 'TX', svgX: 508, svgY: 410, weight: 2 },
+  { city: 'Phoenix', state: 'AZ', svgX: 275, svgY: 370, weight: 3 },
+  { city: 'Santa Fe', state: 'NM', svgX: 338, svgY: 330, weight: 2 },
+  // West
+  { city: 'Los Angeles', state: 'CA', svgX: 170, svgY: 350, weight: 7 },
+  { city: 'San Francisco', state: 'CA', svgX: 135, svgY: 278, weight: 4 },
+  { city: 'San Diego', state: 'CA', svgX: 185, svgY: 378, weight: 3 },
+  { city: 'Portland', state: 'OR', svgX: 148, svgY: 148, weight: 3 },
+  { city: 'Seattle', state: 'WA', svgX: 158, svgY: 105, weight: 4 },
+  { city: 'Denver', state: 'CO', svgX: 375, svgY: 272, weight: 4 },
+  { city: 'Salt Lake City', state: 'UT', svgX: 290, svgY: 242, weight: 2 },
+  { city: 'Las Vegas', state: 'NV', svgX: 225, svgY: 322, weight: 3 },
+  // Hawaii inset
+  { city: 'Honolulu', state: 'HI', svgX: 305, svgY: 530, weight: 2 },
+];
+const _totalCityWeight = US_CITIES.reduce((s, c) => s + c.weight, 0);
+function _pickCity(seed: number): typeof US_CITIES[0] {
+  let r = ((seed * 2654435761) >>> 0) % _totalCityWeight;
+  for (const c of US_CITIES) { r -= c.weight; if (r < 0) return c; }
+  return US_CITIES[0];
+}
+export const US_CITY_COORDS = US_CITIES;
 function _genUsers(): User[] {
   const seed: User[] = [
-    { id: '6f3a2c1e-84b7-4d9f-a312-1c8e5f2b7a04', name: 'Sarah Chen', email: 'sarah.chen@bloomday.co', role: 'vendor', status: 'active', joined: '2024-11-01', listings: 3, transactions: 12, tawk_id: 'tawk_6f3a2c1e', revenue: 4600, repeatFlags: 0 },
-    { id: 'b2e91d73-3f0c-4a8e-b654-9d7c1a3e5f28', name: 'Marcus Webb', email: 'marcus.webb@gmail.com', role: 'couple', status: 'active', joined: '2025-01-15', listings: 0, transactions: 2, tawk_id: 'tawk_b2e91d73', revenue: 0, repeatFlags: 0 },
-    { id: 'a4f78c29-9e1b-4c6d-8a53-2f0e7b4d1c96', name: 'Bloom & Co Florals', email: 'hello@bloomco.com', role: 'vendor', status: 'suspended', joined: '2024-09-10', listings: 7, transactions: 31, tawk_id: 'tawk_a4f78c29', revenue: 18200, repeatFlags: 3 },
-    { id: 'c7d45e81-2a9f-4b3c-96e7-5f1d8a0b2e34', name: 'Jordan & Priya Ellis', email: 'jordan.priya@icloud.com', role: 'couple', status: 'active', joined: '2025-02-01', listings: 0, transactions: 1, tawk_id: 'tawk_c7d45e81', revenue: 0, repeatFlags: 0 },
-    { id: 'e9b12f47-7c3d-4e5a-b891-0a6c2f8d4e73', name: 'Magnolia Events', email: 'info@magnoliaevents.com', role: 'vendor', status: 'pending', joined: '2025-02-20', listings: 0, transactions: 0, tawk_id: 'tawk_e9b12f47', revenue: 0, repeatFlags: 0 },
-    { id: 'f1a23b45-6c78-9d01-e234-5f67a8b9c0d1', name: 'The Sound Co.', email: 'booking@thesoundco.com', role: 'vendor', status: 'active', joined: '2024-10-05', listings: 4, transactions: 22, tawk_id: 'tawk_f1a23b45', revenue: 12400, repeatFlags: 0 },
+    { id: '6f3a2c1e-84b7-4d9f-a312-1c8e5f2b7a04', name: 'Sarah Chen', email: 'sarah.chen@bloomday.co', role: 'vendor', status: 'active', joined: '2024-11-01', listings: 3, transactions: 12, tawk_id: 'tawk_6f3a2c1e', revenue: 4600, repeatFlags: 0, city: 'Austin', state: 'TX' },
+    { id: 'b2e91d73-3f0c-4a8e-b654-9d7c1a3e5f28', name: 'Marcus Webb', email: 'marcus.webb@gmail.com', role: 'couple', status: 'active', joined: '2025-01-15', listings: 0, transactions: 2, tawk_id: 'tawk_b2e91d73', revenue: 0, repeatFlags: 0, city: 'New York', state: 'NY' },
+    { id: 'a4f78c29-9e1b-4c6d-8a53-2f0e7b4d1c96', name: 'Bloom & Co Florals', email: 'hello@bloomco.com', role: 'vendor', status: 'suspended', joined: '2024-09-10', listings: 7, transactions: 31, tawk_id: 'tawk_a4f78c29', revenue: 18200, repeatFlags: 3, city: 'Charleston', state: 'SC' },
+    { id: 'c7d45e81-2a9f-4b3c-96e7-5f1d8a0b2e34', name: 'Jordan & Priya Ellis', email: 'jordan.priya@icloud.com', role: 'couple', status: 'active', joined: '2025-02-01', listings: 0, transactions: 1, tawk_id: 'tawk_c7d45e81', revenue: 0, repeatFlags: 0, city: 'Los Angeles', state: 'CA' },
+    { id: 'e9b12f47-7c3d-4e5a-b891-0a6c2f8d4e73', name: 'Magnolia Events', email: 'info@magnoliaevents.com', role: 'vendor', status: 'pending', joined: '2025-02-20', listings: 0, transactions: 0, tawk_id: 'tawk_e9b12f47', revenue: 0, repeatFlags: 0, city: 'Nashville', state: 'TN' },
+    { id: 'f1a23b45-6c78-9d01-e234-5f67a8b9c0d1', name: 'The Sound Co.', email: 'booking@thesoundco.com', role: 'vendor', status: 'active', joined: '2024-10-05', listings: 4, transactions: 22, tawk_id: 'tawk_f1a23b45', revenue: 12400, repeatFlags: 0, city: 'Austin', state: 'TX' },
   ];
   const extra: User[] = [];
   let vi = 3, ci = 2;
@@ -48,7 +100,8 @@ function _genUsers(): User[] {
       const email = `info@${slug}${dom}`;
       const txns = Math.floor(Math.abs(Math.sin(idx * 3.14) * 40));
       const rev = txns * (800 + (idx % 5) * 400);
-      extra.push({ id, name, email, role: 'vendor', status, joined, listings: 1 + (idx % 6), transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: rev, repeatFlags: status === 'suspended' ? 2 + (idx % 3) : status === 'probation' ? 1 : 0 });
+      const vc = _pickCity(i + 200);
+      extra.push({ id, name, email, role: 'vendor', status, joined, listings: 1 + (idx % 6), transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: rev, repeatFlags: status === 'suspended' ? 2 + (idx % 3) : status === 'probation' ? 1 : 0, city: vc.city, state: vc.state });
     } else {
       const f1 = _coupleFirsts[ci % _coupleFirsts.length];
       const f2 = _coupleFirsts[(ci + 7) % _coupleFirsts.length];
@@ -59,7 +112,8 @@ function _genUsers(): User[] {
       const txns = Math.floor(Math.abs(Math.sin(idx * 2.71) * 6));
       const coupleStatus = idx % 50 === 0 ? 'suspended' : idx % 60 === 0 ? 'probation' : status === 'pending' ? 'active' : status === 'probation' ? 'active' : status;
       const coupleFlags = coupleStatus === 'suspended' ? 2 + (idx % 2) : coupleStatus === 'probation' ? 1 : idx % 35 === 0 ? 1 : 0;
-      extra.push({ id, name, email, role: 'couple', status: coupleStatus, joined, listings: 0, transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: 0, repeatFlags: coupleFlags });
+      const cc = _pickCity(i + 500);
+      extra.push({ id, name, email, role: 'couple', status: coupleStatus, joined, listings: 0, transactions: txns, tawk_id: `tawk_${id.slice(0, 8)}`, revenue: 0, repeatFlags: coupleFlags, city: cc.city, state: cc.state });
     }
   }
   return [...seed, ...extra];

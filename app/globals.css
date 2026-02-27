@@ -7,6 +7,7 @@ input, button, select, textarea { font-family: inherit; }
 .stat-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
 .panel-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .panel-grid-21 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.map-row { margin-bottom: 28px; }
 .dash-pad { padding: 28px 32px; }
 .console-search { flex: 1; max-width: 440px; margin: 0 32px; position: relative; }
 .console-nav-actions { display: flex; align-items: center; gap: 2px; }
@@ -19,6 +20,7 @@ input, button, select, textarea { font-family: inherit; }
   .stat-grid-3 { grid-template-columns: 1fr; gap: 10px; }
   .panel-grid-2 { grid-template-columns: 1fr; }
   .panel-grid-21 { grid-template-columns: 1fr; }
+  .map-row { margin-bottom: 16px; }
   .dash-pad { padding: 16px; }
   .console-search { display: none; }
   .console-nav-actions { display: none; }

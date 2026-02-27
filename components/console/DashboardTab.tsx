@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
+import { useState } from 'react';
 import { StatCard, MiniBarChart, StackedBarChart, NAVY } from './ui';
 import { riskScore, mkC, type KeywordConfig } from '../../lib/types';
-import { MOCK_GMV_WEEKLY, MOCK_SIGNUPS_WEEKLY } from '../../lib/mockData';
+import { MOCK_GMV_WEEKLY, MOCK_SIGNUPS_WEEKLY, US_CITY_COORDS } from '../../lib/mockData';
+import { US_STATE_PATHS } from '../../lib/usStates';
 
 export function DashboardTab({ data, onNavigate, role, darkMode, kwConfig }: { data: any; onNavigate: (tab: string, filter?: string) => void; role?: string; darkMode?: boolean; kwConfig?: KeywordConfig }) {
   const C = mkC(darkMode ?? false);
@@ -39,6 +41,22 @@ export function DashboardTab({ data, onNavigate, role, darkMode, kwConfig }: { d
   };
 
   const highRiskConvs = kwConfig ? conversations.filter((c: any) => riskScore(c, kwConfig) >= kwConfig.riskConfig.highThreshold) : [];
+
+  // User distribution map data
+  const cityAgg = new Map<string, { city: string; state: string; count: number; svgX: number; svgY: number }>();
+  for (const u of users as any[]) {
+    if (!u.city) continue;
+    const key = `${u.city}, ${u.state}`;
+    const existing = cityAgg.get(key);
+    if (existing) { existing.count++; }
+    else {
+      const coords = US_CITY_COORDS.find((c: any) => c.city === u.city && c.state === u.state);
+      if (coords) cityAgg.set(key, { city: u.city, state: u.state, count: 1, svgX: coords.svgX, svgY: coords.svgY });
+    }
+  }
+  const cityDots = Array.from(cityAgg.values());
+  const maxCityCount = Math.max(...cityDots.map(d => d.count), 1);
+  const [hoveredCity, setHoveredCity] = useState<{ city: string; state: string; count: number; x: number; y: number } | null>(null);
 
   // Moderation queue — items needing action
   const queue: { label: string; detail: string; level: string; tab: string }[] = [
@@ -159,6 +177,60 @@ export function DashboardTab({ data, onNavigate, role, darkMode, kwConfig }: { d
         </div>
         <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px' }}>
           <MiniBarChart data={MOCK_GMV_WEEKLY} valueKey="disputes" label="Disputes per Week" color="#c62828" />
+        </div>
+      </div>
+
+      {/* US MAP — USER DISTRIBUTION */}
+      <div className="map-row">
+        <div style={{ backgroundColor: C.surface, border: '1px solid ' + C.border, borderRadius: '10px', padding: '20px', position: 'relative' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: C.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            User Distribution
+            <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 'normal' }}>{users.length} users across {cityDots.length} cities</span>
+          </div>
+          <svg viewBox="0 0 960 600" style={{ width: '100%', height: 'auto', maxHeight: '420px', display: 'block' }}>
+            {US_STATE_PATHS.map(s => (
+              <path key={s.id} d={s.d} fill={darkMode ? '#1a2340' : '#f0f1f4'} stroke={darkMode ? '#2d3a5c' : '#d1d5db'} strokeWidth={0.75} />
+            ))}
+            {cityDots.map(dot => {
+              const r = 4 + (dot.count / maxCityCount) * 10;
+              const isHovered = hoveredCity?.city === dot.city && hoveredCity?.state === dot.state;
+              return (
+                <circle key={`${dot.city}-${dot.state}`} cx={dot.svgX} cy={dot.svgY} r={isHovered ? r + 2 : r}
+                  fill={darkMode ? '#60a5fa' : NAVY} fillOpacity={isHovered ? 0.95 : 0.7}
+                  stroke={darkMode ? '#93c5fd' : '#1e3a5f'} strokeWidth={isHovered ? 1.5 : 1}
+                  style={{ cursor: 'pointer', transition: 'all 0.15s ease' }}
+                  onMouseEnter={(e) => {
+                    const svg = e.currentTarget.ownerSVGElement;
+                    if (!svg) return;
+                    const rect = svg.getBoundingClientRect();
+                    const pt = svg.createSVGPoint();
+                    pt.x = dot.svgX; pt.y = dot.svgY;
+                    const ctm = svg.getScreenCTM();
+                    if (!ctm) return;
+                    const sp = pt.matrixTransform(ctm);
+                    setHoveredCity({ city: dot.city, state: dot.state, count: dot.count, x: sp.x - rect.left, y: sp.y - rect.top });
+                  }}
+                  onMouseLeave={() => setHoveredCity(null)}
+                />
+              );
+            })}
+          </svg>
+          {hoveredCity && (
+            <div style={{ position: 'absolute', left: hoveredCity.x + 14, top: hoveredCity.y - 8, backgroundColor: darkMode ? '#0f172a' : '#fff', border: '1px solid ' + C.border, borderRadius: '8px', padding: '8px 12px', boxShadow: darkMode ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.1)', pointerEvents: 'none', zIndex: 10, whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: C.text }}>{hoveredCity.city}, {hoveredCity.state}</div>
+              <div style={{ fontSize: '12px', color: C.textMuted, marginTop: '2px' }}>{hoveredCity.count} user{hoveredCity.count !== 1 ? 's' : ''}</div>
+            </div>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid ' + C.borderLight }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: C.textMuted }}>
+              <svg width="8" height="8"><circle cx="4" cy="4" r="3" fill={darkMode ? '#60a5fa' : NAVY} fillOpacity={0.7} /></svg>
+              Fewer users
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: C.textMuted }}>
+              <svg width="16" height="16"><circle cx="8" cy="8" r="7" fill={darkMode ? '#60a5fa' : NAVY} fillOpacity={0.7} /></svg>
+              More users
+            </div>
+          </div>
         </div>
       </div>
 
