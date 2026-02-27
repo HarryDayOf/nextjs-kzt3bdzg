@@ -1,13 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import { useState, useMemo } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useCommunity } from '../CommunityContext';
-import { MarkdownEditor, ForumBtn } from '../../../components/community/ui';
-import { slugify } from '../../../components/community/ui';
+import { MarkdownEditor, ForumBtn, slugify } from '../../../components/community/ui';
 import type { ForumTopic } from '../../../lib/types';
 
 export default function NewTopicPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '60px', textAlign: 'center' }}>Loading...</div>}>
+      <NewTopicForm />
+    </Suspense>
+  );
+}
+
+function NewTopicForm() {
   const searchParams = useSearchParams();
   const defaultCat = searchParams.get('category') || '';
   const { currentUser, darkMode, C, categories, setTopics } = useCommunity();
