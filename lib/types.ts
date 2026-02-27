@@ -2,9 +2,9 @@
 export type Role = 'admin' | 'cs' | 'moderation' | 'leadership' | 'readonly';
 
 export const ROLE_PERMS: Record<Role, string[]> = {
-  admin:      ['view','edit','suspend','refund','delete','notes','assign','export','config','users_manage','bulk'],
-  cs:         ['view','edit','notes','assign','refund','export'],
-  moderation: ['view','notes','suspend','assign','export'],
+  admin:      ['view','edit','suspend','refund','delete','notes','assign','export','config','users_manage','bulk','forum_moderate','forum_pin','forum_lock','forum_hide','forum_ban'],
+  cs:         ['view','edit','notes','assign','refund','export','forum_moderate'],
+  moderation: ['view','notes','suspend','assign','export','forum_moderate','forum_hide'],
   leadership: ['view','export','notes'],
   readonly:   ['view'],
 };
@@ -241,7 +241,124 @@ export const STATUS_STYLES: Record<string, { label: string; bg: string; color: s
   standard:       { label:'Standard',       bg:'#f3f4f6', color:'#6b7280' },
   approved:       { label:'Approved',       bg:'#e8f5e9', color:'#2e7d32' },
   rejected:       { label:'Rejected',       bg:'#fdecea', color:'#c62828' },
+  hidden:         { label:'Hidden',         bg:'#f3f4f6', color:'#6b7280' },
+  deleted:        { label:'Deleted',        bg:'#fdecea', color:'#c62828' },
+  locked:         { label:'Locked',         bg:'#e0f2fe', color:'#0369a1' },
+  banned:         { label:'Banned',         bg:'#fdecea', color:'#c62828' },
+  dismissed:      { label:'Dismissed',      bg:'#f3f4f6', color:'#6b7280' },
+  actioned:       { label:'Actioned',       bg:'#e8f5e9', color:'#2e7d32' },
+  reviewed:       { label:'Reviewed',       bg:'#e0f2fe', color:'#0369a1' },
 };
+
+// ─── COMMUNITY FORUM ────────────────────────────────────────────────────────
+
+export type ForumUserRole = 'vendor' | 'couple';
+
+export interface CommunityUser {
+  id: string;
+  name: string;
+  email: string;
+  role: ForumUserRole;
+  avatar: string;
+  joinedAt: string;
+  bio?: string;
+  postCount: number;
+  replyCount: number;
+  reactionCount: number;
+  status: 'active' | 'suspended' | 'banned';
+  badges: string[];
+}
+
+export interface ForumCategory {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  bg: string;
+  topicCount: number;
+  lastActivity: string;
+  sortOrder: number;
+  visibleTo: 'all' | 'vendor' | 'couple';
+}
+
+export interface ForumReaction {
+  id: string;
+  userId: string;
+  userName: string;
+  type: 'like' | 'helpful' | 'love' | 'congrats';
+  createdAt: string;
+}
+
+export interface ForumTopic {
+  id: string;
+  categoryId: string;
+  categorySlug: string;
+  title: string;
+  slug: string;
+  body: string;
+  authorId: string;
+  authorName: string;
+  authorRole: ForumUserRole;
+  authorAvatar: string;
+  createdAt: string;
+  updatedAt: string;
+  replyCount: number;
+  viewCount: number;
+  lastReplyAt: string | null;
+  lastReplyBy: string | null;
+  pinned: boolean;
+  locked: boolean;
+  status: 'active' | 'flagged' | 'hidden' | 'deleted';
+  tags: string[];
+  reactions: ForumReaction[];
+}
+
+export interface ForumReply {
+  id: string;
+  topicId: string;
+  parentReplyId: string | null;
+  body: string;
+  authorId: string;
+  authorName: string;
+  authorRole: ForumUserRole;
+  authorAvatar: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'flagged' | 'hidden' | 'deleted';
+  reactions: ForumReaction[];
+}
+
+export type ForumReportReason = 'spam' | 'inappropriate' | 'off_topic' | 'harassment' | 'self_promotion' | 'other';
+
+export interface ForumReport {
+  id: string;
+  targetType: 'topic' | 'reply';
+  targetId: string;
+  targetPreview: string;
+  reporterId: string;
+  reporterName: string;
+  reason: ForumReportReason;
+  detail: string;
+  status: 'pending' | 'reviewed' | 'dismissed' | 'actioned';
+  createdAt: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  resolution?: string;
+}
+
+export interface ForumNotification {
+  id: string;
+  userId: string;
+  type: 'reply_to_topic' | 'reply_to_reply' | 'reaction' | 'mention' | 'topic_pinned' | 'moderation';
+  title: string;
+  body: string;
+  linkTopicId: string;
+  linkReplyId?: string;
+  read: boolean;
+  createdAt: string;
+}
 
 // ─── EXPORTS / PRINT ─────────────────────────────────────────────────────────
 export function downloadCSV(rows: Record<string, unknown>[], filename: string) {

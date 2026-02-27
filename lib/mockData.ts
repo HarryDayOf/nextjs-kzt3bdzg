@@ -1,4 +1,4 @@
-import type { User, Listing, Transaction, Review, Conversation, Note, AuditEntry, AlertConfig, ConsoleUser, VendorDocument, DocStatus, LoginEntry, KeywordCategoryConfig, KeywordRule, RiskConfig, KeywordConfig } from './types';
+import type { User, Listing, Transaction, Review, Conversation, Note, AuditEntry, AlertConfig, ConsoleUser, VendorDocument, DocStatus, LoginEntry, KeywordCategoryConfig, KeywordRule, RiskConfig, KeywordConfig, CommunityUser, ForumCategory, ForumTopic, ForumReply, ForumReaction, ForumReport, ForumNotification } from './types';
 
 export const MOCK_CONSOLE_USERS: ConsoleUser[] = [
   { id: 'cu_1', name: 'Harry McLaughlin', email: 'harry@dayof.com', role: 'admin', active: true, joined: '2024-09-01', lastLogin: '2025-02-25T08:30:00Z' },
@@ -836,4 +836,279 @@ export const MOCK_SIGNUPS_WEEKLY = [
   { week: 'Feb 10', vendors: 1, couples: 7 },
   { week: 'Feb 17', vendors: 1, couples: 5 },
   { week: 'Feb 24', vendors: 1, couples: 2 },
+];
+
+// ─── COMMUNITY FORUM MOCK DATA ─────────────────────────────────────────────
+
+export const MOCK_FORUM_CATEGORIES: ForumCategory[] = [
+  { id: 'fcat_1', slug: 'vendor-tips', name: 'Vendor Tips', description: 'Business advice, pricing strategies, and best practices for wedding vendors', icon: '💡', color: '#7c3aed', bg: '#f5f3ff', topicCount: 0, lastActivity: '2025-02-25T14:00:00Z', sortOrder: 1, visibleTo: 'all' },
+  { id: 'fcat_2', slug: 'planning-advice', name: 'Planning Advice', description: 'Wedding planning timelines, checklists, and tips from experienced couples', icon: '📋', color: '#0369a1', bg: '#e0f2fe', topicCount: 0, lastActivity: '2025-02-24T18:30:00Z', sortOrder: 2, visibleTo: 'all' },
+  { id: 'fcat_3', slug: 'inspiration', name: 'Inspiration', description: 'Photos, mood boards, themes, and creative ideas for your big day', icon: '✨', color: '#e65100', bg: '#fff3e0', topicCount: 0, lastActivity: '2025-02-23T10:15:00Z', sortOrder: 3, visibleTo: 'all' },
+  { id: 'fcat_4', slug: 'general', name: 'General Discussion', description: 'Anything wedding-related that does not fit the other categories', icon: '💬', color: '#2e7d32', bg: '#e8f5e9', topicCount: 0, lastActivity: '2025-02-25T09:00:00Z', sortOrder: 4, visibleTo: 'all' },
+  { id: 'fcat_5', slug: 'vendor-lounge', name: 'Vendor Lounge', description: 'Private space for vendors to discuss industry topics and network', icon: '🤝', color: '#b45309', bg: '#fff8e1', topicCount: 0, lastActivity: '2025-02-22T16:45:00Z', sortOrder: 5, visibleTo: 'vendor' },
+];
+
+function _genCommunityUsers(): CommunityUser[] {
+  return MOCK_USERS.slice(0, 40).map((u, i) => ({
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role as CommunityUser['role'],
+    avatar: '',
+    joinedAt: u.joined,
+    bio: i % 4 === 0 ? (u.role === 'vendor' ? 'Wedding industry professional passionate about creating memorable moments.' : 'Currently planning our dream wedding and loving every minute of it!') : undefined,
+    postCount: Math.floor(Math.abs(Math.sin(i * 2.1) * 15)),
+    replyCount: Math.floor(Math.abs(Math.sin(i * 3.4) * 30)),
+    reactionCount: Math.floor(Math.abs(Math.sin(i * 1.7) * 50)),
+    status: u.status === 'suspended' ? 'suspended' as const : 'active' as const,
+    badges: [
+      ...(u.role === 'vendor' && u.status === 'active' ? ['verified_vendor'] : []),
+      ...(i < 5 ? ['early_member'] : []),
+      ...(Math.abs(Math.sin(i * 2.1) * 15) > 10 ? ['top_contributor'] : []),
+    ],
+  }));
+}
+export const MOCK_COMMUNITY_USERS: CommunityUser[] = _genCommunityUsers();
+
+const _topicSeeds: { cat: string; catSlug: string; title: string; body: string; tags: string[]; pinned?: boolean }[] = [
+  // Vendor Tips
+  { cat: 'fcat_1', catSlug: 'vendor-tips', title: 'How I doubled my bookings in 6 months', body: 'After struggling for my first year on the platform, I made a few key changes to my profile and communication style that completely transformed my business.\n\n**1. Professional photos matter**\nI invested in getting my own work professionally photographed. The difference was night and day.\n\n**2. Response time is everything**\nI started responding to inquiries within 2 hours. Couples notice when you are quick and attentive.\n\n**3. Offer package options**\nInstead of one flat price, I created 3 tiers. This gave couples flexibility and increased my average booking value by 40%.', tags: ['growth', 'bookings', 'tips'], pinned: true },
+  { cat: 'fcat_1', catSlug: 'vendor-tips', title: 'Pricing strategies that actually work for small vendors', body: 'Pricing is one of the hardest things to get right. Here is what I have learned after 3 years:\n\n- **Research your market** before setting prices\n- **Value-based pricing** works better than hourly rates\n- **Seasonal adjustments** can boost off-peak bookings\n- Never race to the bottom on price', tags: ['pricing', 'strategy'] },
+  { cat: 'fcat_1', catSlug: 'vendor-tips', title: 'Building a portfolio when you are just starting out', body: 'When I first started, I had zero professional photos to show. Here is how I built a portfolio from scratch:\n\n1. Offered discounted sessions to friends and family\n2. Collaborated with other new vendors on styled shoots\n3. Volunteered to assist established photographers\n4. Used every real event as a portfolio opportunity\n\nWithin 6 months I had enough work to fill a solid gallery.', tags: ['portfolio', 'new-vendor'] },
+  { cat: 'fcat_1', catSlug: 'vendor-tips', title: 'How to handle difficult clients gracefully', body: 'Every vendor will encounter challenging situations. The key is having systems in place:\n\n- **Clear contracts** prevent most misunderstandings\n- **Document everything** in writing\n- **Stay professional** even when emotions run high\n- **Know when to walk away** - some clients are not worth the stress\n\nWhat are your best tips for handling tricky situations?', tags: ['clients', 'communication'] },
+  { cat: 'fcat_1', catSlug: 'vendor-tips', title: 'Instagram vs TikTok for wedding vendors in 2025', body: 'I have been experimenting with both platforms and here is my honest take:\n\n**Instagram** still drives more direct bookings for me. Couples search hashtags and save posts to their planning boards.\n\n**TikTok** is great for brand awareness and reaching younger couples. Behind-the-scenes content performs really well.\n\nMy recommendation: focus on Instagram for conversions, use TikTok for reach.', tags: ['social-media', 'marketing'] },
+  // Planning Advice
+  { cat: 'fcat_2', catSlug: 'planning-advice', title: 'Our complete 12-month wedding planning timeline', body: 'We just got married last month and I wish someone had given me this timeline earlier!\n\n**12 months out:** Set budget, book venue, start vendor research\n**9 months:** Book photographer, DJ/band, caterer, florist\n**6 months:** Send save-the-dates, book officiant, choose wedding party attire\n**3 months:** Send invitations, finalize menu, book rehearsal dinner\n**1 month:** Final dress fitting, confirm all vendors, create seating chart\n**1 week:** Final timeline to vendors, pack for honeymoon\n\nHope this helps someone!', tags: ['timeline', 'checklist'], pinned: true },
+  { cat: 'fcat_2', catSlug: 'planning-advice', title: 'How to choose vendors without losing your mind', body: 'We interviewed over 30 vendors before making our final choices. Here is what I learned:\n\n1. Start with reviews and recommendations\n2. Have a standard list of questions for each vendor type\n3. Trust your gut feeling about personality fit\n4. Always check their availability before falling in love with them\n5. Get everything in writing\n\nThe process is exhausting but worth it!', tags: ['vendors', 'research'] },
+  { cat: 'fcat_2', catSlug: 'planning-advice', title: 'Budget breakdown: how we did a beautiful wedding for $25K', body: 'Everyone said it was impossible but we made it work! Here is how we allocated:\n\n- Venue: $6,000 (off-peak Saturday)\n- Catering: $7,500 (buffet style, 100 guests)\n- Photography: $3,000 (talented newer photographer)\n- Flowers: $2,000 (mix of real and dried)\n- DJ: $1,500\n- Dress/Attire: $2,000\n- Decor/Misc: $3,000\n\nThe biggest savings came from choosing an off-peak date and being flexible with our flower choices.', tags: ['budget', 'savings'] },
+  { cat: 'fcat_2', catSlug: 'planning-advice', title: 'Things I wish I knew before planning a destination wedding', body: 'Our destination wedding in Mexico was magical but came with unexpected challenges:\n\n- **Travel logistics** are way more complex than you think\n- **Not everyone will come** and that is okay\n- **Local vendor communication** can be tricky with time zones\n- **Weather backup plans** are absolutely essential\n- **Legal requirements** vary hugely by country\n\nWould I do it again? Absolutely. But I would start planning even earlier.', tags: ['destination', 'planning'] },
+  // Inspiration
+  { cat: 'fcat_3', catSlug: 'inspiration', title: 'Garden party wedding ideas we loved', body: 'We just had our garden party wedding and here are the elements that got the most compliments:\n\n- **Mismatched vintage furniture** for the ceremony seating\n- **Hanging greenery installations** over the dinner tables\n- **A lavender lemonade bar** that doubled as decor\n- **Fairy lights everywhere** once the sun went down\n- **Lawn games** during cocktail hour (croquet was the biggest hit)\n\nThe whole vibe was relaxed, romantic, and so us.', tags: ['garden', 'outdoor', 'decor'] },
+  { cat: 'fcat_3', catSlug: 'inspiration', title: 'Moody fall color palettes that are stunning', body: 'Fall weddings have the best color options. Some palettes we considered:\n\n1. **Burgundy + Sage + Gold** - classic and romantic\n2. **Terracotta + Dusty Rose + Cream** - warm and modern\n3. **Deep Purple + Copper + Forest Green** - rich and dramatic\n4. **Burnt Orange + Navy + Ivory** - bold and beautiful\n\nWe went with #2 and it was absolutely perfect for our October wedding.', tags: ['fall', 'colors', 'palette'] },
+  { cat: 'fcat_3', catSlug: 'inspiration', title: 'Our rustic barn wedding on a budget', body: 'We found an amazing barn venue that was half the price of traditional venues. Here is what made it special:\n\n- We did all our own table decor with mason jars and wildflowers\n- String lights transformed the space\n- A local food truck handled catering\n- We made a Spotify playlist instead of hiring a DJ for the early part\n\nTotal cost was under $15K for 80 guests and everyone said it was the most fun wedding they had been to.', tags: ['rustic', 'barn', 'budget'] },
+  // General
+  { cat: 'fcat_4', catSlug: 'general', title: 'What is the biggest wedding trend you are seeing in 2025?', body: 'Curious what everyone is noticing! For us, it seems like:\n\n- Smaller, more intimate celebrations\n- Weekday weddings becoming more accepted\n- Sustainable/eco-friendly choices\n- Non-traditional venues (museums, rooftops, farms)\n- Experiential elements over traditional formalities\n\nWhat trends are you seeing?', tags: ['trends', '2025'], pinned: true },
+  { cat: 'fcat_4', catSlug: 'general', title: 'Introductions - tell us about yourself!', body: 'Hi everyone! I think it would be great to get to know each other. Whether you are a vendor or a couple planning your wedding, drop a quick intro below!\n\nI will start: I am a wedding photographer based in Austin, TX. I have been shooting weddings for 4 years and absolutely love capturing candid moments. Looking forward to connecting with this community!', tags: ['introductions', 'welcome'], pinned: true },
+  { cat: 'fcat_4', catSlug: 'general', title: 'How early is too early to start planning?', body: 'We just got engaged (!!!) and people keep telling us different things. Some say start venue shopping right away, others say enjoy being engaged for a while first.\n\nWe are thinking of a wedding about 18 months from now. When did you all start seriously planning?', tags: ['engagement', 'timeline'] },
+  { cat: 'fcat_4', catSlug: 'general', title: 'Thank you DayOf community - we did it!', body: 'Just wanted to pop in and say thank you to this amazing community. We found our photographer, florist, AND caterer through DayOf and they were all incredible.\n\nThe wedding was two weeks ago and it was everything we dreamed of. The advice we got here about planning timelines and vendor communication was invaluable.\n\nTo all the couples still planning - trust the process and enjoy every moment. It goes by so fast!', tags: ['gratitude', 'success-story'] },
+  // Vendor Lounge
+  { cat: 'fcat_5', catSlug: 'vendor-lounge', title: 'How are you handling the slow season?', body: 'January and February are always quiet for me. I use this time to:\n\n- Update my portfolio and website\n- Reach out to past clients for reviews\n- Network with other vendors\n- Take online courses to improve my skills\n- Plan promotions for the upcoming busy season\n\nWhat does your slow season routine look like?', tags: ['slow-season', 'business'] },
+  { cat: 'fcat_5', catSlug: 'vendor-lounge', title: 'Vendor collaboration opportunities', body: 'I am a florist looking to do some styled shoots this spring. Would love to connect with:\n\n- Photographers who need portfolio content\n- Venues that want updated marketing photos\n- Other decor vendors who want to collaborate\n\nI am based in the Southeast but open to travel for the right collaboration. Drop a comment if you are interested!', tags: ['collaboration', 'networking'] },
+  { cat: 'fcat_5', catSlug: 'vendor-lounge', title: 'Insurance recommendations for wedding vendors?', body: 'I am finally getting proper business insurance and it is overwhelming. What kind of coverage do you all carry?\n\nSpecifically looking for:\n- General liability recommendations\n- Equipment coverage (I am a DJ)\n- Professional liability / errors & omissions\n\nAny specific companies or brokers you would recommend?', tags: ['insurance', 'business'] },
+];
+
+const _replyBodies = [
+  'This is such great advice! I went through something similar and wish I had this resource earlier.',
+  'Completely agree with your second point. That made the biggest difference for us.',
+  'We tried this approach and it worked perfectly. Thank you for sharing!',
+  'Has anyone else had a different experience? I found the opposite to be true in my market.',
+  'Saving this for later - so helpful!',
+  'This is exactly what I needed to hear right now. Thank you!',
+  'Great tips! I would also add that consistency is key. Keep showing up and the results will follow.',
+  'We are in the early stages of planning and this is incredibly useful. Bookmarked!',
+  'I love this breakdown. Very transparent and helpful for people on a budget.',
+  'Can you share more details about how you found your venue? That price seems amazing!',
+  'As a vendor, I really appreciate when couples share their experience like this. It helps us improve.',
+  'This community is so supportive. Love seeing everyone help each other out!',
+  'Just wanted to second this - we did something very similar and our guests still talk about it.',
+  'I have a slightly different perspective. In my experience, starting early gives you the most options and the least stress.',
+  'Congratulations! Stories like this make all the hard work worth it.',
+  'Following this thread! Would love to hear more recommendations.',
+  'For anyone reading this later - can confirm these tips work. Applied them to my business last year.',
+  'Does anyone have recommendations for the Austin/San Antonio area specifically?',
+  'I am a new vendor and this is exactly the kind of content I was looking for. Thank you!',
+  'Would love to see more posts like this. The real, honest experiences are so much more valuable than generic advice.',
+];
+
+function _genForumTopics(): ForumTopic[] {
+  const topics: ForumTopic[] = [];
+  const users = MOCK_COMMUNITY_USERS.filter(u => u.status === 'active');
+  for (let i = 0; i < _topicSeeds.length; i++) {
+    const s = _topicSeeds[i];
+    const author = users[i % users.length];
+    const daysAgo = Math.floor(Math.abs(Math.sin(i * 1.3) * 45));
+    const created = new Date(Date.now() - daysAgo * 86400000).toISOString();
+    const replyCount = Math.floor(Math.abs(Math.sin(i * 2.7) * 8)) + 1;
+    const viewCount = replyCount * 12 + Math.floor(Math.abs(Math.sin(i * 4.1) * 200));
+    const lastReplyDays = Math.max(0, daysAgo - Math.floor(Math.abs(Math.sin(i * 3.2) * 5)));
+    const reactions: ForumReaction[] = [];
+    const reactCount = Math.floor(Math.abs(Math.sin(i * 1.8) * 6));
+    const reactTypes: ForumReaction['type'][] = ['like', 'helpful', 'love', 'congrats'];
+    for (let r = 0; r < reactCount; r++) {
+      const reactor = users[(i * 3 + r * 7) % users.length];
+      if (reactor.id !== author.id) {
+        reactions.push({ id: `fr_t${i}_${r}`, userId: reactor.id, userName: reactor.name, type: reactTypes[r % 4], createdAt: created });
+      }
+    }
+    topics.push({
+      id: `ft_${i + 1}`,
+      categoryId: s.cat,
+      categorySlug: s.catSlug,
+      title: s.title,
+      slug: s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+      body: s.body,
+      authorId: author.id,
+      authorName: author.name,
+      authorRole: author.role,
+      authorAvatar: '',
+      createdAt: created,
+      updatedAt: created,
+      replyCount,
+      viewCount,
+      lastReplyAt: new Date(Date.now() - lastReplyDays * 86400000).toISOString(),
+      lastReplyBy: users[(i + 3) % users.length].name,
+      pinned: s.pinned ?? false,
+      locked: i === 13,
+      status: i === 7 ? 'flagged' : 'active',
+      tags: s.tags,
+      reactions,
+    });
+  }
+  return topics;
+}
+export const MOCK_FORUM_TOPICS: ForumTopic[] = _genForumTopics();
+
+// Backfill category topic counts
+MOCK_FORUM_CATEGORIES.forEach(cat => {
+  cat.topicCount = MOCK_FORUM_TOPICS.filter(t => t.categoryId === cat.id && t.status !== 'deleted').length;
+});
+
+function _genForumReplies(): ForumReply[] {
+  const replies: ForumReply[] = [];
+  const users = MOCK_COMMUNITY_USERS.filter(u => u.status === 'active');
+  let rid = 1;
+  for (const topic of MOCK_FORUM_TOPICS) {
+    const count = topic.replyCount;
+    for (let r = 0; r < count; r++) {
+      const author = users[(rid * 7 + r * 3) % users.length];
+      const daysAgo = Math.max(0, Math.floor((new Date().getTime() - new Date(topic.createdAt).getTime()) / 86400000) - r);
+      const created = new Date(Date.now() - daysAgo * 86400000).toISOString();
+      const parentId = r > 0 && r % 3 === 0 ? `fre_${rid - 1}` : null;
+      const reactions: ForumReaction[] = [];
+      const reactCount = Math.floor(Math.abs(Math.sin(rid * 2.3) * 3));
+      const reactTypes: ForumReaction['type'][] = ['like', 'helpful', 'love', 'congrats'];
+      for (let x = 0; x < reactCount; x++) {
+        const reactor = users[(rid * 5 + x * 11) % users.length];
+        if (reactor.id !== author.id) {
+          reactions.push({ id: `fr_r${rid}_${x}`, userId: reactor.id, userName: reactor.name, type: reactTypes[x % 4], createdAt: created });
+        }
+      }
+      replies.push({
+        id: `fre_${rid}`,
+        topicId: topic.id,
+        parentReplyId: parentId,
+        body: _replyBodies[rid % _replyBodies.length],
+        authorId: author.id,
+        authorName: author.name,
+        authorRole: author.role,
+        authorAvatar: '',
+        createdAt: created,
+        updatedAt: created,
+        status: rid === 5 ? 'flagged' : 'active',
+        reactions,
+      });
+      rid++;
+    }
+  }
+  return replies;
+}
+export const MOCK_FORUM_REPLIES: ForumReply[] = _genForumReplies();
+
+function _genForumReports(): ForumReport[] {
+  const reasons: ForumReport['reason'][] = ['spam', 'inappropriate', 'off_topic', 'harassment', 'self_promotion', 'other'];
+  const users = MOCK_COMMUNITY_USERS.filter(u => u.status === 'active');
+  const flaggedTopics = MOCK_FORUM_TOPICS.filter(t => t.status === 'flagged');
+  const flaggedReplies = MOCK_FORUM_REPLIES.filter(r => r.status === 'flagged');
+  const reports: ForumReport[] = [];
+  let idx = 0;
+  for (const t of flaggedTopics) {
+    reports.push({
+      id: `frep_${++idx}`,
+      targetType: 'topic',
+      targetId: t.id,
+      targetPreview: t.title.slice(0, 80),
+      reporterId: users[(idx * 5) % users.length].id,
+      reporterName: users[(idx * 5) % users.length].name,
+      reason: reasons[idx % reasons.length],
+      detail: 'This content appears to violate community guidelines.',
+      status: 'pending',
+      createdAt: new Date(Date.now() - idx * 86400000).toISOString(),
+    });
+  }
+  for (const r of flaggedReplies) {
+    reports.push({
+      id: `frep_${++idx}`,
+      targetType: 'reply',
+      targetId: r.id,
+      targetPreview: r.body.slice(0, 80),
+      reporterId: users[(idx * 3) % users.length].id,
+      reporterName: users[(idx * 3) % users.length].name,
+      reason: reasons[idx % reasons.length],
+      detail: 'This reply seems inappropriate for the forum.',
+      status: 'pending',
+      createdAt: new Date(Date.now() - idx * 86400000 * 2).toISOString(),
+    });
+  }
+  // Add some resolved reports
+  for (let i = 0; i < 5; i++) {
+    const t = MOCK_FORUM_TOPICS[(i + 2) % MOCK_FORUM_TOPICS.length];
+    reports.push({
+      id: `frep_${++idx}`,
+      targetType: 'topic',
+      targetId: t.id,
+      targetPreview: t.title.slice(0, 80),
+      reporterId: users[(idx * 7) % users.length].id,
+      reporterName: users[(idx * 7) % users.length].name,
+      reason: reasons[(idx + 2) % reasons.length],
+      detail: 'Reported for review.',
+      status: i < 3 ? 'dismissed' : 'actioned',
+      createdAt: new Date(Date.now() - (idx + 10) * 86400000).toISOString(),
+      reviewedBy: 'Harry McLaughlin',
+      reviewedAt: new Date(Date.now() - (idx + 8) * 86400000).toISOString(),
+      resolution: i < 3 ? 'Content does not violate guidelines.' : 'Content hidden for policy violation.',
+    });
+  }
+  return reports;
+}
+export const MOCK_FORUM_REPORTS: ForumReport[] = _genForumReports();
+
+function _genForumNotifications(): ForumNotification[] {
+  const firstUser = MOCK_COMMUNITY_USERS[0];
+  const notifs: ForumNotification[] = [];
+  const types: ForumNotification['type'][] = ['reply_to_topic', 'reply_to_reply', 'reaction', 'mention'];
+  for (let i = 0; i < 20; i++) {
+    const topic = MOCK_FORUM_TOPICS[i % MOCK_FORUM_TOPICS.length];
+    const actor = MOCK_COMMUNITY_USERS[(i + 3) % MOCK_COMMUNITY_USERS.length];
+    const type = types[i % types.length];
+    const daysAgo = Math.floor(i * 1.5);
+    notifs.push({
+      id: `fn_${i + 1}`,
+      userId: firstUser.id,
+      type,
+      title: type === 'reply_to_topic' ? `${actor.name} replied to your topic`
+        : type === 'reply_to_reply' ? `${actor.name} replied to your comment`
+        : type === 'reaction' ? `${actor.name} liked your post`
+        : `${actor.name} mentioned you`,
+      body: type === 'reply_to_topic' || type === 'reply_to_reply'
+        ? `New reply in "${topic.title.slice(0, 40)}..."`
+        : type === 'reaction' ? `in "${topic.title.slice(0, 40)}..."`
+        : `in "${topic.title.slice(0, 40)}..."`,
+      linkTopicId: topic.id,
+      read: i > 5,
+      createdAt: new Date(Date.now() - daysAgo * 86400000).toISOString(),
+    });
+  }
+  return notifs;
+}
+export const MOCK_FORUM_NOTIFICATIONS: ForumNotification[] = _genForumNotifications();
+
+export const MOCK_FORUM_WEEKLY = [
+  { week: 'Jan 6', topics: 3, replies: 12 },
+  { week: 'Jan 13', topics: 5, replies: 24 },
+  { week: 'Jan 20', topics: 4, replies: 18 },
+  { week: 'Jan 27', topics: 6, replies: 31 },
+  { week: 'Feb 3', topics: 4, replies: 22 },
+  { week: 'Feb 10', topics: 7, replies: 38 },
+  { week: 'Feb 17', topics: 5, replies: 28 },
+  { week: 'Feb 24', topics: 2, replies: 9 },
 ];

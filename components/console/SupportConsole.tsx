@@ -8,12 +8,13 @@ import { DocumentsTab } from './DocumentsTab';
 import { UserModal, ListingModal, TransactionModal, ReviewModal, ConversationModal, SendMessageModal } from './modals/EntityModals';
 import { ReportsModal, AuditLogModal, ConsoleUsersModal, AlertsConfigModal } from './modals/SystemModals';
 import { SettingsTab } from './SettingsTab';
+import { CommunityModTab } from './CommunityModTab';
 import {
   MOCK_USERS, MOCK_LISTINGS, MOCK_TRANSACTIONS, MOCK_REVIEWS,
   MOCK_CONVERSATIONS, MOCK_NOTES, MOCK_AUDIT, MOCK_ALERT_CONFIGS, MOCK_CONSOLE_USERS,
-  MOCK_KEYWORD_CONFIG,
+  MOCK_KEYWORD_CONFIG, MOCK_FORUM_REPORTS,
 } from '../../lib/mockData';
-import { downloadCSV, printTable, mkC, detectKeywords, type Role, type Note, type AuditEntry, type KeywordConfig } from '../../lib/types';
+import { downloadCSV, printTable, mkC, detectKeywords, type Role, type Note, type AuditEntry, type KeywordConfig, type ForumReport } from '../../lib/types';
 
 // ─── FILTER + SORT ENGINE ─────────────────────────────────────────────────────
 function applyFiltersAndSort(items: any[], search: string, fields: string[], filters: any, sort: string, kwConfig?: KeywordConfig): any[] {
@@ -105,6 +106,7 @@ export default function SupportConsole({ user }: { user: any }) {
   const [alertConfigs, setAlertConfigs] = useState<any[]>(MOCK_ALERT_CONFIGS);
   const [consoleUsers, setConsoleUsers] = useState<any[]>(MOCK_CONSOLE_USERS);
   const [kwConfig, setKwConfig] = useState<KeywordConfig>(MOCK_KEYWORD_CONFIG);
+  const [forumReports, setForumReports] = useState<ForumReport[]>(MOCK_FORUM_REPORTS);
 
   // — selected entity modals
   const [selU, setSelU] = useState<any>(null);
@@ -340,6 +342,7 @@ export default function SupportConsole({ user }: { user: any }) {
   // ─── TABS CONFIG ────────────────────────────────────────────────────────────
   const pendingDocCount = listings.reduce((sum: number, l: any) => sum + ((l.documents ?? []).filter((d: any) => d.status === 'pending').length), 0);
   const totalDocCount = listings.reduce((sum: number, l: any) => sum + ((l.documents ?? []).length), 0);
+  const pendingForumReports = forumReports.filter(r => r.status === 'pending').length;
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', alert: 0 },
     { id: 'documents', label: 'Documents', alert: pendingDocCount },
@@ -348,6 +351,7 @@ export default function SupportConsole({ user }: { user: any }) {
     { id: 'transactions', label: 'Transactions', alert: 0 },
     { id: 'reviews', label: 'Reviews', alert: 0 },
     { id: 'conversations', label: 'Conversations', alert: unrev },
+    { id: 'community', label: 'Community', alert: pendingForumReports },
     ...(currentRole === 'admin' ? [{ id: 'settings', label: 'Settings', alert: 0 }] : []),
   ];
 
@@ -448,6 +452,8 @@ export default function SupportConsole({ user }: { user: any }) {
           <SettingsTab kwConfig={kwConfig} onUpdateKwConfig={setKwConfig} darkMode={darkMode} currentRole={currentRole} toast={toast} addAudit={addAudit} user={user} />
         ) : tab === 'documents' ? (
           <DocumentsTab listings={listings} darkMode={darkMode} onAction={handleListingAction} onSelectListing={l => setSelL(l)} />
+        ) : tab === 'community' ? (
+          <CommunityModTab darkMode={darkMode} currentRole={currentRole} toast={toast} addAudit={addAudit} user={user} forumReports={forumReports} setForumReports={setForumReports} />
         ) : (
           <div style={{ padding: '0' }}>
             <div className="table-container" style={{ backgroundColor: C.surface, borderRadius: '10px', border: '1px solid ' + C.border, margin: '24px 28px', boxShadow: darkMode ? 'none' : '0 1px 4px rgba(0,0,0,0.04)', transition: 'background-color 0.25s' }}>
