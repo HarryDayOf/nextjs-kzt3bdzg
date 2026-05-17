@@ -22,7 +22,7 @@ input, button, select, textarea { font-family: inherit; }
   .panel-grid-21 { grid-template-columns: 1fr; }
   .map-row { margin-bottom: 16px; }
   .dash-pad { padding: 16px; }
-  .console-search { display: none; }
+  .console-search { margin: 0 10px; }
   .console-nav-actions { display: none; }
   .console-header-right { gap: 6px; }
   .table-container { margin: 12px !important; border-radius: 8px !important; }
